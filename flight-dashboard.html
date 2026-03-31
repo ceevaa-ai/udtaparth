@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flight Log — All Time</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700&family=IBM+Plex+Mono:wght@400;500;600&family=Bricolage+Grotesque:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#FBF8F3;--card:#FFFFFF;--bdr:#E6DFD3;--bdr2:#D4CABB;
+  --ink:#1B2838;--t1:#1B2838;--t2:#4A5568;--t3:#8B9AAF;--t4:#B8C4D4;
+  --pri:#2D6AE0;--pri-l:#EDF2FC;--terra:#C2532D;--terra-l:#FCF0EB;
+  --sage:#4A8F6D;--sage-l:#EDF7F1;--amber:#D4850A;--amber-l:#FDF6EA;
+  --slate:#64748B;
+  --head:'Bricolage Grotesque',system-ui,sans-serif;
+  --sans:'Instrument Sans',system-ui,sans-serif;
+  --mono:'IBM Plex Mono','SF Mono',monospace;
+  --r:14px;--r2:10px;
+  --sh:0 1px 2px rgba(27,40,56,.03),0 3px 12px rgba(27,40,56,.05);
+}
+html{font-size:15px;scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t1);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--bdr2);border-radius:3px}
+
+/* ── Hero ── */
+.hero{min-height:85vh;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:2rem;background:linear-gradient(165deg,#1B2838 0%,#2A3F5A 40%,#3D5A80 100%);position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-30%;right:-20%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(194,83,45,.15) 0%,transparent 70%)}
+.hero::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:repeating-linear-gradient(90deg,rgba(255,255,255,.15) 0,rgba(255,255,255,.15) 12px,transparent 12px,transparent 24px)}
+.hero-tag{font-family:var(--mono);font-size:.55rem;letter-spacing:.5em;text-transform:uppercase;color:rgba(255,255,255,.5);font-weight:500;margin-bottom:1.2rem}
+.hero h1{font-family:var(--head);font-size:clamp(2.5rem,6vw,5rem);font-weight:800;line-height:1.06;letter-spacing:-.03em;color:#fff}
+.hero h1 span{color:#E8945A}
+.stats-row{display:flex;gap:.8rem;margin-top:2.2rem;flex-wrap:wrap;justify-content:center}
+.stat-pill{background:rgba(255,255,255,.07);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.6rem 1.1rem;text-align:center}
+.stat-pill .n{font-family:var(--mono);font-size:1.3rem;font-weight:600;color:#fff;line-height:1}
+.stat-pill .l{font-family:var(--sans);font-size:.55rem;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.45);margin-top:.15rem}
+.hero-sub{font-family:var(--mono);font-size:.64rem;color:rgba(255,255,255,.35);margin-top:1.5rem}
+
+/* ── Layout ── */
+.wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+section{padding:2.5rem 0}
+.sec-head{display:flex;align-items:center;gap:.7rem;margin-bottom:1.5rem}
+.sec-n{font-family:var(--mono);font-size:.6rem;font-weight:600;color:var(--terra);background:var(--terra-l);padding:.2rem .55rem;border-radius:4px;letter-spacing:.05em}
+.sec-t{font-family:var(--head);font-size:1.2rem;font-weight:700;color:var(--ink);letter-spacing:-.02em}
+.divider{height:0;border:none;border-top:2px dashed var(--bdr);max-width:1200px;margin:0 auto;opacity:.5}
+
+/* ── Cards ── */
+.box{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r);padding:1.3rem;box-shadow:var(--sh)}
+.box-t{font-family:var(--sans);font-size:.68rem;font-weight:600;color:var(--t3);margin-bottom:.8rem;text-transform:uppercase;letter-spacing:.04em}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem}
+@media(max-width:800px){.g2,.g3,.g4{grid-template-columns:1fr}}
+
+svg text{font-family:'IBM Plex Mono',monospace}
+.tip{position:fixed;background:var(--ink);border-radius:6px;padding:.45rem .7rem;font-family:var(--sans);font-size:.67rem;color:#fff;pointer-events:none;z-index:1000;display:none;max-width:240px;box-shadow:0 6px 20px rgba(27,40,56,.3);line-height:1.5}
+.tip b{color:#fff}
+
+/* ── Tables ── */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:.72rem}
+.tbl th{text-align:left;padding:.5rem .65rem;border-bottom:2px solid var(--bdr);color:var(--t3);font-weight:600;font-size:.56rem;letter-spacing:.08em;text-transform:uppercase}
+.tbl td{padding:.4rem .65rem;border-bottom:1px solid var(--bg);color:var(--t2)}
+.tbl tr:hover td{background:var(--terra-l)}
+.hl{color:var(--pri);font-weight:600}
+
+/* ── Record cards ── */
+.rec{background:var(--card);border:1px solid var(--bdr);border-left:3px solid var(--pri);border-radius:var(--r2);padding:.9rem 1.1rem;box-shadow:var(--sh)}
+.rec-l{font-family:var(--sans);font-size:.53rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t4);margin-bottom:.25rem}
+.rec-v{font-family:var(--head);font-size:.95rem;font-weight:700;color:var(--ink);line-height:1.2}
+.rec-s{font-family:var(--mono);font-size:.58rem;color:var(--t3);margin-top:.1rem}
+
+/* ── Insight cards ── */
+.insight{background:var(--card);border:1px solid var(--bdr);border-radius:var(--r2);padding:1rem 1.2rem;box-shadow:var(--sh);display:flex;gap:.8rem;align-items:flex-start;border-left:3px solid var(--amber)}
+.insight-emoji{font-size:1.2rem;flex-shrink:0;margin-top:.05rem}
+.insight-title{font-family:var(--head);font-size:.78rem;font-weight:700;color:var(--ink);margin-bottom:.15rem}
+.insight-body{font-size:.67rem;color:var(--t2);line-height:1.6}
+
+.footer{text-align:center;padding:2rem;font-family:var(--mono);font-size:.55rem;color:var(--t4)}
+</style>
+</head>
+<body>
+<div class="tip" id="tip"></div>
+
+<section class="hero">
+<div class="hero-tag">All-Time Flight Dashboard</div>
+<h1>141 Flights.<br><span>11 Years of Sky.</span></h1>
+<div class="stats-row">
+<div class="stat-pill"><div class="n">1,53,018</div><div class="l">Kilometres</div></div>
+<div class="stat-pill"><div class="n">283</div><div class="l">Hours Airborne</div></div>
+<div class="stat-pill"><div class="n">24</div><div class="l">Airports</div></div>
+<div class="stat-pill"><div class="n">6</div><div class="l">Countries</div></div>
+<div class="stat-pill"><div class="n">11</div><div class="l">Airlines</div></div>
+</div>
+<div class="hero-sub">Jun 2015 – Mar 2026 · 3.8× around Earth · 40% to the Moon</div>
+</section>
+<div class="divider"></div>
+
+<!-- 01 WHEN -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">01</span><span class="sec-t">When You Fly</span></div>
+<div class="box" style="margin-bottom:1rem"><div class="box-t">Flights per Year</div><div id="c-year"></div></div>
+<div class="g2">
+<div class="box"><div class="box-t">Year × Month</div><div id="c-heat"></div></div>
+<div class="box"><div class="box-t">24-Hour Flight Clock</div><div id="c-clock"></div></div>
+</div>
+</section>
+<div class="divider"></div>
+
+<!-- 02 WHERE -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">02</span><span class="sec-t">Where You Go</span></div>
+<div class="g2" style="margin-bottom:1rem">
+<div class="box"><div class="box-t">Top Airports</div><div id="c-airports"></div></div>
+<div class="box"><div class="box-t">Top Routes</div><div id="c-routes"></div></div>
+</div>
+<div class="box"><div class="box-t">International</div><div id="c-intl"></div></div>
+</section>
+<div class="divider"></div>
+
+<!-- 03 PUNCTUALITY (compressed) -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">03</span><span class="sec-t">Punctuality</span></div>
+<div class="g4" style="margin-bottom:1rem" id="c-delay-cards"></div>
+</section>
+<div class="divider"></div>
+
+<!-- 04 FLIGHT × BODY (trimmed) -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">04</span><span class="sec-t">Flight × Body</span></div>
+<div style="font-size:.68rem;color:var(--t3);margin-bottom:1rem">50 flights with Apple Watch data overlap (Feb 2023 – Mar 2026)</div>
+<div id="c-body"></div>
+</section>
+<div class="divider"></div>
+
+<!-- 05 HOW FAR (compressed to single card) -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">05</span><span class="sec-t">How Far You've Gone</span></div>
+<div class="box"><div id="c-miles"></div></div>
+</section>
+<div class="divider"></div>
+
+<!-- 06 AVGEEK (expanded - absorbs airlines, fleet, records) -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">06</span><span class="sec-t">AvGeek Corner</span></div>
+<div class="box" style="margin-bottom:1rem"><div class="box-t">Speed Record — 7.7× Difference</div><div id="c-speed"></div></div>
+<div class="g2" style="margin-bottom:1rem">
+<div class="box"><div class="box-t">Airline Scorecard</div><div id="c-airlines"></div></div>
+<div class="box"><div class="box-t">Manufacturer Split</div><div id="c-aircraft"></div></div>
+</div>
+<div class="box" style="margin-bottom:1rem"><div class="box-t">Your Fleet</div><div id="c-fleet"></div></div>
+<div class="g3" style="margin-bottom:1rem" id="c-av-records"></div>
+<div class="g2">
+<div class="box"><div class="box-t">Size Extremes</div><div id="c-size"></div></div>
+<div class="box"><div class="box-t">Category Split</div><div id="c-cat"></div></div>
+</div>
+</section>
+<div class="divider"></div>
+
+<!-- 07 INSIGHTS -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">07</span><span class="sec-t">Insights</span></div>
+<div class="g2" id="c-insights"></div>
+</section>
+
+<!-- 08 ROAST -->
+<section class="wrap">
+<div class="sec-head"><span class="sec-n">08</span><span class="sec-t">The Roast</span></div>
+<div style="font-size:.62rem;color:var(--t3);margin-bottom:1rem">You asked for this.</div>
+<div class="g2" id="c-roast"></div>
+</section>
+<div class="divider"></div>
+
+<div class="footer" style="max-width:700px;margin:0 auto;padding:3rem 2rem;line-height:1.8">
+<div style="font-size:.7rem;color:#8B9AAF;margin-bottom:.5rem">Flight Dashboard · Flighty Export + Apple Watch · Jun 2015 – Mar 2026</div>
+<div style="font-size:.6rem;color:#B8C4D4">Built with mass mass mass tokens of Claude, mass hours of back-and-forth, 141 Flighty flights cross-referenced against 3,796 HRV readings, 556 resting heart rate measurements, 11,016 sleep records, 13 aircraft types, and 113 unique tail numbers — only to discover that your body doesn't care about HRV on flight days, you sleep 3 hours before early flights regardless, and 72% of Indian aviation is just IndiGo. The ATR 72 remains slower than some cars. No turboprops were emotionally harmed in the making of this dashboard. Probably.</div>
+</div>
+
+<script>
+const D={"flights":[{"date":"2015-06-20","year":2015,"month":6,"airline":"GOW","airline_name":"GoAir","flight":"185","from":"DEL","to":"IXJ","from_city":"New Delhi","to_city":"Jammu","distance_km":508,"dep_delay_min":5,"arr_delay_min":null,"duration_min":85,"dep_hour":14,"dow":5,"aircraft":"Airbus A320","tail":null,"is_intl":false},{"date":"2016-05-09","year":2016,"month":5,"airline":"JAI","airline_name":"Jet Airways","flight":"2424","from":"VNS","to":"DEL","from_city":"Varanasi","to_city":"New Delhi","distance_km":667,"dep_delay_min":-3,"arr_delay_min":-12,"duration_min":95,"dep_hour":12,"dow":0,"aircraft":"Boeing 737-800","tail":null,"is_intl":false},{"date":"2016-05-09","year":2016,"month":5,"airline":"JAI","airline_name":"Jet Airways","flight":"854","from":"DEL","to":"MAA","from_city":"New Delhi","to_city":"Chennai","distance_km":1759,"dep_delay_min":-4,"arr_delay_min":-8,"duration_min":165,"dep_hour":14,"dow":0,"aircraft":"Boeing 737-800","tail":null,"is_intl":false},{"date":"2016-05-12","year":2016,"month":5,"airline":"SEJ","airline_name":"SpiceJet","flight":"104","from":"MAA","to":"DEL","from_city":"Chennai","to_city":"New Delhi","distance_km":1759,"dep_delay_min":0,"arr_delay_min":20,"duration_min":160,"dep_hour":12,"dow":3,"aircraft":"Boeing 737-700","tail":"VTSLB","is_intl":false},{"date":"2016-05-12","year":2016,"month":5,"airline":"SEJ","airline_name":"SpiceJet","flight":"279","from":"DEL","to":"VNS","from_city":"New Delhi","to_city":"Varanasi","distance_km":667,"dep_delay_min":63,"arr_delay_min":56,"duration_min":85,"dep_hour":18,"dow":3,"aircraft":"Boeing 737-700","tail":"VTSLB","is_intl":false},{"date":"2016-05-20","year":2016,"month":5,"airline":"AIC","airline_name":"Air India","flight":"420","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":-19,"arr_delay_min":-17,"duration_min":90,"dep_hour":14,"dow":4,"aircraft":"Airbus A319","tail":"VTSCI","is_intl":false},{"date":"2016-05-29","year":2016,"month":5,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":20,"arr_delay_min":5,"duration_min":90,"dep_hour":12,"dow":6,"aircraft":"Airbus A319","tail":"VTSCG","is_intl":false},{"date":"2016-05-31","year":2016,"month":5,"airline":"AIC","airline_name":"Air India","flight":"420","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":-17,"arr_delay_min":-20,"duration_min":90,"dep_hour":14,"dow":1,"aircraft":"Airbus A319","tail":"VTSCF","is_intl":false},{"date":"2016-06-09","year":2016,"month":6,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":-10,"arr_delay_min":-29,"duration_min":90,"dep_hour":12,"dow":3,"aircraft":"Airbus A319","tail":"VTSCT","is_intl":false},{"date":"2016-06-10","year":2016,"month":6,"airline":"AIC","airline_name":"Air India","flight":"420","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":68,"arr_delay_min":55,"duration_min":90,"dep_hour":14,"dow":4,"aircraft":"Airbus A321","tail":"VTPPD","is_intl":false},{"date":"2016-07-17","year":2016,"month":7,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":9,"arr_delay_min":2,"duration_min":90,"dep_hour":12,"dow":6,"aircraft":"Airbus A319","tail":"VTSCP","is_intl":false},{"date":"2016-08-16","year":2016,"month":8,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":20,"arr_delay_min":15,"duration_min":90,"dep_hour":12,"dow":1,"aircraft":"Airbus A319","tail":"VTSCF","is_intl":false},{"date":"2016-10-02","year":2016,"month":10,"airline":"AIC","airline_name":"Air India","flight":"420","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":-1,"arr_delay_min":-3,"duration_min":90,"dep_hour":14,"dow":6,"aircraft":"Airbus A319","tail":"VTSCI","is_intl":false},{"date":"2016-11-29","year":2016,"month":11,"airline":"AIC","airline_name":"Air India","flight":"420","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":-3,"arr_delay_min":0,"duration_min":80,"dep_hour":14,"dow":1,"aircraft":"Airbus A319","tail":"VTSCK","is_intl":false},{"date":"2016-12-04","year":2016,"month":12,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":9,"arr_delay_min":-15,"duration_min":90,"dep_hour":12,"dow":6,"aircraft":"Airbus A319","tail":"VTSCK","is_intl":false},{"date":"2017-01-06","year":2017,"month":1,"airline":"AIC","airline_name":"Air India","flight":"419","from":"VNS","to":"BBI","from_city":"Varanasi","to_city":"Bhubaneswar","distance_km":654,"dep_delay_min":59,"arr_delay_min":48,"duration_min":90,"dep_hour":12,"dow":4,"aircraft":"Airbus A319","tail":"VTSCM","is_intl":false},{"date":"2018-07-09","year":2018,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"713","from":"CCU","to":"VNS","from_city":"Kolkata","to_city":"Varanasi","distance_km":647,"dep_delay_min":5,"arr_delay_min":null,"duration_min":80,"dep_hour":8,"dow":0,"aircraft":"Airbus A320","tail":"VTIHH","is_intl":false},{"date":"2019-02-26","year":2019,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"598","from":"BBI","to":"CCU","from_city":"Bhubaneswar","to_city":"Kolkata","distance_km":382,"dep_delay_min":null,"arr_delay_min":null,"duration_min":65,"dep_hour":20,"dow":1,"aircraft":null,"tail":null,"is_intl":false},{"date":"2019-03-02","year":2019,"month":3,"airline":"IAD","airline_name":"Indian Airlines","flight":"1563","from":"CCU","to":"BBI","from_city":"Kolkata","to_city":"Bhubaneswar","distance_km":382,"dep_delay_min":-3,"arr_delay_min":-3,"duration_min":70,"dep_hour":19,"dow":5,"aircraft":"Airbus A320","tail":"VTIXC","is_intl":false},{"date":"2019-05-15","year":2019,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"2127","from":"BBI","to":"DEL","from_city":"Bhubaneswar","to_city":"New Delhi","distance_km":1277,"dep_delay_min":-8,"arr_delay_min":-22,"duration_min":145,"dep_hour":1,"dow":2,"aircraft":"Airbus A320","tail":"VTIEY","is_intl":false},{"date":"2019-07-10","year":2019,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"7988","from":"CCU","to":"IXD","from_city":"Kolkata","to_city":"Prayagraj","distance_km":749,"dep_delay_min":null,"arr_delay_min":null,"duration_min":160,"dep_hour":6,"dow":2,"aircraft":"ATR 72","tail":"VT-IYR","is_intl":false},{"date":"2019-08-23","year":2019,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"2405","from":"BBI","to":"DEL","from_city":"Bhubaneswar","to_city":"New Delhi","distance_km":1277,"dep_delay_min":null,"arr_delay_min":-35,"duration_min":150,"dep_hour":21,"dow":4,"aircraft":"Airbus A320neo","tail":"VTIJE","is_intl":false},{"date":"2019-08-26","year":2019,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"2013","from":"DEL","to":"BBI","from_city":"New Delhi","to_city":"Bhubaneswar","distance_km":1277,"dep_delay_min":0,"arr_delay_min":null,"duration_min":130,"dep_hour":9,"dow":0,"aircraft":"Airbus A320","tail":"VTIDQ","is_intl":false},{"date":"2020-01-29","year":2020,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"431","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":-2,"arr_delay_min":-4,"duration_min":135,"dep_hour":20,"dow":2,"aircraft":"Airbus A320neo","tail":"VTITJ","is_intl":false},{"date":"2020-01-30","year":2020,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"6236","from":"BLR","to":"GOI","from_city":"Bengaluru","to_city":"Goa","distance_km":483,"dep_delay_min":-7,"arr_delay_min":-15,"duration_min":80,"dep_hour":0,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIVS","is_intl":false},{"date":"2020-02-03","year":2020,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"477","from":"GOI","to":"BLR","from_city":"Goa","to_city":"Bengaluru","distance_km":483,"dep_delay_min":-8,"arr_delay_min":-19,"duration_min":80,"dep_hour":8,"dow":0,"aircraft":"Airbus A320","tail":"VTIAQ","is_intl":false},{"date":"2020-02-03","year":2020,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"823","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":2,"arr_delay_min":-1,"duration_min":120,"dep_hour":11,"dow":0,"aircraft":"Airbus A320","tail":"VTIKI","is_intl":false},{"date":"2020-02-27","year":2020,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"6869","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":null,"arr_delay_min":-4,"duration_min":135,"dep_hour":21,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIVE","is_intl":false},{"date":"2020-03-02","year":2020,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"266","from":"BLR","to":"HYD","from_city":"Bengaluru","to_city":"Hyderabad","distance_km":456,"dep_delay_min":0,"arr_delay_min":null,"duration_min":70,"dep_hour":6,"dow":0,"aircraft":"Airbus A320neo","tail":"VTITI","is_intl":false},{"date":"2020-03-06","year":2020,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"7972","from":"BBI","to":"VNS","from_city":"Bhubaneswar","to_city":"Varanasi","distance_km":654,"dep_delay_min":null,"arr_delay_min":null,"duration_min":115,"dep_hour":21,"dow":4,"aircraft":"ATR 72","tail":"VT-IYX","is_intl":false},{"date":"2021-03-29","year":2021,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":8,"arr_delay_min":null,"duration_min":null,"dep_hour":10,"dow":0,"aircraft":null,"tail":"VTIYY","is_intl":false},{"date":"2021-04-04","year":2021,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":5,"arr_delay_min":null,"duration_min":null,"dep_hour":7,"dow":6,"aircraft":null,"tail":"VTIYC","is_intl":false},{"date":"2021-09-22","year":2021,"month":9,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-10,"arr_delay_min":null,"duration_min":null,"dep_hour":10,"dow":2,"aircraft":null,"tail":"VTIXV","is_intl":false},{"date":"2021-09-27","year":2021,"month":9,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-4,"arr_delay_min":null,"duration_min":null,"dep_hour":7,"dow":0,"aircraft":null,"tail":"VTIYE","is_intl":false},{"date":"2021-11-11","year":2021,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-34,"arr_delay_min":null,"duration_min":null,"dep_hour":10,"dow":3,"aircraft":null,"tail":"VTIXX","is_intl":false},{"date":"2021-11-15","year":2021,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":82,"arr_delay_min":null,"duration_min":null,"dep_hour":7,"dow":0,"aircraft":null,"tail":"VTIXS","is_intl":false},{"date":"2022-07-02","year":2022,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-8,"arr_delay_min":-20,"duration_min":120,"dep_hour":9,"dow":5,"aircraft":"ATR 42-300 / 320","tail":"VTIYW","is_intl":false},{"date":"2022-08-12","year":2022,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"416","from":"BBI","to":"BOM","from_city":"Bhubaneswar","to_city":"Mumbai","distance_km":1362,"dep_delay_min":-15,"arr_delay_min":2,"duration_min":145,"dep_hour":6,"dow":4,"aircraft":"Airbus A321neo","tail":"VTIVY","is_intl":false},{"date":"2022-08-17","year":2022,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"6161","from":"BOM","to":"BBI","from_city":"Mumbai","to_city":"Bhubaneswar","distance_km":1362,"dep_delay_min":0,"arr_delay_min":10,"duration_min":135,"dep_hour":11,"dow":2,"aircraft":"Airbus A320neo","tail":"VTIIN","is_intl":false},{"date":"2022-11-02","year":2022,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"611","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":-3,"arr_delay_min":-21,"duration_min":130,"dep_hour":22,"dow":2,"aircraft":"Airbus A320neo","tail":"VTITU","is_intl":false},{"date":"2022-11-08","year":2022,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"368","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-11,"arr_delay_min":-7,"duration_min":115,"dep_hour":6,"dow":1,"aircraft":"Airbus A321neo","tail":"VTIUV","is_intl":false},{"date":"2023-02-04","year":2023,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-21,"arr_delay_min":-35,"duration_min":110,"dep_hour":12,"dow":5,"aircraft":"ATR 42 / ATR 72","tail":"VTIRF","is_intl":false},{"date":"2023-02-12","year":2023,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-16,"arr_delay_min":-16,"duration_min":120,"dep_hour":9,"dow":6,"aircraft":"ATR 42 / ATR 72","tail":"VTIXX","is_intl":false},{"date":"2023-02-25","year":2023,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-25,"arr_delay_min":-30,"duration_min":110,"dep_hour":12,"dow":5,"aircraft":"ATR 42 / ATR 72","tail":"VTIRH","is_intl":false},{"date":"2023-03-12","year":2023,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-17,"arr_delay_min":-29,"duration_min":120,"dep_hour":9,"dow":6,"aircraft":"ATR 42 / ATR 72","tail":"VTIYA","is_intl":false},{"date":"2023-04-29","year":2023,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"7941","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-18,"arr_delay_min":-32,"duration_min":120,"dep_hour":12,"dow":5,"aircraft":"ATR 42 / ATR 72","tail":"VTIRH","is_intl":false},{"date":"2023-05-12","year":2023,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":4,"arr_delay_min":3,"duration_min":115,"dep_hour":9,"dow":4,"aircraft":"ATR 42 / ATR 72","tail":"VTIYB","is_intl":false},{"date":"2023-07-04","year":2023,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"1017","from":"BBI","to":"SIN","from_city":"Bhubaneswar","to_city":"Singapore","distance_km":2882,"dep_delay_min":-12,"arr_delay_min":-15,"duration_min":400,"dep_hour":6,"dow":1,"aircraft":"Airbus A320neo","tail":"VTIVN","is_intl":true},{"date":"2023-07-08","year":2023,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"1018","from":"SIN","to":"BBI","from_city":"Singapore","to_city":"Bhubaneswar","distance_km":2882,"dep_delay_min":-9,"arr_delay_min":-8,"duration_min":100,"dep_hour":14,"dow":5,"aircraft":"Airbus A320neo","tail":"VTISR","is_intl":true},{"date":"2023-07-09","year":2023,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"7942","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-31,"arr_delay_min":-33,"duration_min":115,"dep_hour":9,"dow":6,"aircraft":"ATR 72","tail":"VTIYZ","is_intl":false},{"date":"2023-07-29","year":2023,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"6938","from":"IXD","to":"BOM","from_city":"Prayagraj","to_city":"Mumbai","distance_km":1153,"dep_delay_min":21,"arr_delay_min":16,"duration_min":125,"dep_hour":14,"dow":5,"aircraft":"Airbus A321neo","tail":"VTIMM","is_intl":false},{"date":"2023-08-04","year":2023,"month":8,"airline":"IAD","airline_name":"Indian Airlines","flight":"2992","from":"BOM","to":"BLR","from_city":"Mumbai","to_city":"Bengaluru","distance_km":834,"dep_delay_min":19,"arr_delay_min":null,"duration_min":110,"dep_hour":23,"dow":4,"aircraft":"Airbus A320","tail":"VTBOM","is_intl":false},{"date":"2023-08-19","year":2023,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"2137","from":"GOI","to":"BOM","from_city":"Goa","to_city":"Mumbai","distance_km":425,"dep_delay_min":-1,"arr_delay_min":6,"duration_min":65,"dep_hour":6,"dow":5,"aircraft":"Airbus A321neo","tail":"VTIMS","is_intl":false},{"date":"2023-08-19","year":2023,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"5191","from":"BOM","to":"IXD","from_city":"Mumbai","to_city":"Prayagraj","distance_km":1153,"dep_delay_min":-26,"arr_delay_min":-16,"duration_min":130,"dep_hour":11,"dow":5,"aircraft":"Airbus A321neo","tail":"VTIMQ","is_intl":false},{"date":"2023-10-15","year":2023,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6379","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":-3,"arr_delay_min":-8,"duration_min":145,"dep_hour":15,"dow":6,"aircraft":"Airbus A320neo","tail":"VTITF","is_intl":false},{"date":"2023-10-22","year":2023,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"5164","from":"BLR","to":"BOM","from_city":"Bengaluru","to_city":"Mumbai","distance_km":834,"dep_delay_min":-19,"arr_delay_min":-8,"duration_min":110,"dep_hour":7,"dow":6,"aircraft":"Airbus A321neo","tail":"VTIBU","is_intl":false},{"date":"2023-10-22","year":2023,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"5191","from":"BOM","to":"IXD","from_city":"Mumbai","to_city":"Prayagraj","distance_km":1153,"dep_delay_min":-1,"arr_delay_min":-13,"duration_min":130,"dep_hour":11,"dow":6,"aircraft":"Airbus A321neo","tail":"VTIMX","is_intl":false},{"date":"2023-11-04","year":2023,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"6502","from":"VNS","to":"CCU","from_city":"Varanasi","to_city":"Kolkata","distance_km":647,"dep_delay_min":null,"arr_delay_min":-12,"duration_min":75,"dep_hour":16,"dow":5,"aircraft":"Airbus A320neo","tail":"VTISX","is_intl":false},{"date":"2023-12-22","year":2023,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"7936","from":"IXD","to":"LKO","from_city":"Prayagraj","to_city":"Lucknow","distance_km":169,"dep_delay_min":-2,"arr_delay_min":0,"duration_min":40,"dep_hour":16,"dow":4,"aircraft":"ATR 72","tail":"VTIXS","is_intl":false},{"date":"2023-12-22","year":2023,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"6354","from":"LKO","to":"BLR","from_city":"Lucknow","to_city":"Bengaluru","distance_km":1544,"dep_delay_min":-9,"arr_delay_min":-6,"duration_min":150,"dep_hour":19,"dow":4,"aircraft":"Airbus A320neo","tail":"VTIVY","is_intl":false},{"date":"2024-01-07","year":2024,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"6353","from":"BLR","to":"LKO","from_city":"Bengaluru","to_city":"Lucknow","distance_km":1544,"dep_delay_min":8,"arr_delay_min":null,"duration_min":150,"dep_hour":6,"dow":6,"aircraft":"Airbus A320","tail":"YLLDU","is_intl":false},{"date":"2024-01-25","year":2024,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"6938","from":"IXD","to":"BOM","from_city":"Prayagraj","to_city":"Mumbai","distance_km":1153,"dep_delay_min":53,"arr_delay_min":38,"duration_min":150,"dep_hour":13,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIZK","is_intl":false},{"date":"2024-02-03","year":2024,"month":2,"airline":"VTI","airline_name":"Vistara","flight":"845","from":"BOM","to":"BLR","from_city":"Mumbai","to_city":"Bengaluru","distance_km":834,"dep_delay_min":6,"arr_delay_min":-10,"duration_min":110,"dep_hour":5,"dow":5,"aircraft":"Airbus A320neo","tail":"VTTNE","is_intl":false},{"date":"2024-02-12","year":2024,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":0,"arr_delay_min":-20,"duration_min":145,"dep_hour":8,"dow":0,"aircraft":"Airbus A320","tail":"VTIFV","is_intl":false},{"date":"2024-04-06","year":2024,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"2439","from":"IXD","to":"DEL","from_city":"Prayagraj","to_city":"New Delhi","distance_km":575,"dep_delay_min":13,"arr_delay_min":2,"duration_min":80,"dep_hour":12,"dow":5,"aircraft":"Airbus A321neo","tail":"VTIUJ","is_intl":false},{"date":"2024-04-19","year":2024,"month":4,"airline":"VTI","airline_name":"Vistara","flight":"881","from":"BLR","to":"GOI","from_city":"Bengaluru","to_city":"Goa","distance_km":483,"dep_delay_min":-7,"arr_delay_min":-18,"duration_min":80,"dep_hour":12,"dow":4,"aircraft":"Airbus A320neo","tail":"VTTQS","is_intl":false},{"date":"2024-04-21","year":2024,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"633","from":"GOI","to":"BLR","from_city":"Goa","to_city":"Bengaluru","distance_km":483,"dep_delay_min":-4,"arr_delay_min":-10,"duration_min":75,"dep_hour":14,"dow":6,"aircraft":"Airbus A320neo","tail":"VTISX","is_intl":false},{"date":"2024-05-01","year":2024,"month":5,"airline":"VTI","airline_name":"Vistara","flight":"897","from":"BLR","to":"HYD","from_city":"Bengaluru","to_city":"Hyderabad","distance_km":456,"dep_delay_min":-9,"arr_delay_min":2,"duration_min":70,"dep_hour":7,"dow":2,"aircraft":"Airbus A320neo","tail":"VTTNN","is_intl":false},{"date":"2024-05-10","year":2024,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":4,"arr_delay_min":0,"duration_min":135,"dep_hour":8,"dow":4,"aircraft":"Airbus A320neo","tail":"VTIID","is_intl":false},{"date":"2024-05-19","year":2024,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":3,"arr_delay_min":10,"duration_min":135,"dep_hour":11,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIJF","is_intl":false},{"date":"2024-07-06","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"368","from":"BLR","to":"BHO","from_city":"Bengaluru","to_city":"Bhopal","distance_km":1123,"dep_delay_min":-9,"arr_delay_min":-11,"duration_min":120,"dep_hour":6,"dow":5,"aircraft":"Airbus A320neo","tail":"VTIQC","is_intl":false},{"date":"2024-07-06","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"7926","from":"BHO","to":"IXD","from_city":"Bhopal","to_city":"Prayagraj","distance_km":506,"dep_delay_min":-21,"arr_delay_min":-24,"duration_min":85,"dep_hour":9,"dow":5,"aircraft":"ATR 72","tail":"VTIYZ","is_intl":false},{"date":"2024-07-12","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"7936","from":"IXD","to":"LKO","from_city":"Prayagraj","to_city":"Lucknow","distance_km":169,"dep_delay_min":22,"arr_delay_min":26,"duration_min":45,"dep_hour":17,"dow":4,"aircraft":"ATR 72","tail":"VTIYR","is_intl":false},{"date":"2024-07-12","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"906","from":"LKO","to":"BLR","from_city":"Lucknow","to_city":"Bengaluru","distance_km":1544,"dep_delay_min":56,"arr_delay_min":39,"duration_min":155,"dep_hour":21,"dow":4,"aircraft":"Airbus A320","tail":"VTIFM","is_intl":false},{"date":"2024-07-20","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"959","from":"BLR","to":"IDR","from_city":"Bengaluru","to_city":"Indore","distance_km":1078,"dep_delay_min":-12,"arr_delay_min":-2,"duration_min":105,"dep_hour":7,"dow":5,"aircraft":"Airbus A320neo","tail":"VTIZK","is_intl":false},{"date":"2024-07-21","year":2024,"month":7,"airline":"IGO","airline_name":"IndiGo","flight":"6738","from":"IDR","to":"BLR","from_city":"Indore","to_city":"Bengaluru","distance_km":1078,"dep_delay_min":-2,"arr_delay_min":4,"duration_min":120,"dep_hour":15,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIQO","is_intl":false},{"date":"2024-08-08","year":2024,"month":8,"airline":"AIC","airline_name":"Air India","flight":"808","from":"BLR","to":"DEL","from_city":"Bengaluru","to_city":"New Delhi","distance_km":1709,"dep_delay_min":5,"arr_delay_min":null,"duration_min":180,"dep_hour":20,"dow":3,"aircraft":"Airbus A321","tail":"VTPPQ","is_intl":false},{"date":"2024-08-11","year":2024,"month":8,"airline":"AIC","airline_name":"Air India","flight":"512","from":"DEL","to":"BLR","from_city":"New Delhi","to_city":"Bengaluru","distance_km":1709,"dep_delay_min":20,"arr_delay_min":-19,"duration_min":190,"dep_hour":20,"dow":6,"aircraft":"Airbus A350-900","tail":"VTJRE","is_intl":false},{"date":"2024-08-28","year":2024,"month":8,"airline":"VTI","airline_name":"Vistara","flight":"897","from":"BLR","to":"HYD","from_city":"Bengaluru","to_city":"Hyderabad","distance_km":456,"dep_delay_min":36,"arr_delay_min":30,"duration_min":70,"dep_hour":7,"dow":2,"aircraft":"Airbus A320neo","tail":"VTTYA","is_intl":false},{"date":"2024-09-02","year":2024,"month":9,"airline":"VTI","airline_name":"Vistara","flight":"894","from":"HYD","to":"BLR","from_city":"Hyderabad","to_city":"Bengaluru","distance_km":456,"dep_delay_min":3,"arr_delay_min":2,"duration_min":80,"dep_hour":20,"dow":0,"aircraft":"Airbus A320neo","tail":"VTTNN","is_intl":false},{"date":"2024-10-11","year":2024,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":-3,"arr_delay_min":10,"duration_min":135,"dep_hour":8,"dow":4,"aircraft":"Airbus A320","tail":"VTIAQ","is_intl":false},{"date":"2024-10-20","year":2024,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":2,"arr_delay_min":16,"duration_min":135,"dep_hour":11,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIQI","is_intl":false},{"date":"2024-10-30","year":2024,"month":10,"airline":"VTI","airline_name":"Vistara","flight":"866","from":"BLR","to":"BOM","from_city":"Bengaluru","to_city":"Mumbai","distance_km":834,"dep_delay_min":-7,"arr_delay_min":1,"duration_min":105,"dep_hour":6,"dow":2,"aircraft":"Airbus A320neo","tail":"VTTQC","is_intl":false},{"date":"2024-11-03","year":2024,"month":11,"airline":"AKJ","airline_name":"AirAsia India","flight":"1367","from":"BOM","to":"BLR","from_city":"Mumbai","to_city":"Bengaluru","distance_km":834,"dep_delay_min":0,"arr_delay_min":null,"duration_min":105,"dep_hour":22,"dow":6,"aircraft":"Boeing 737 MAX 8","tail":"VTYAS","is_intl":false},{"date":"2024-11-09","year":2024,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"1605","from":"BLR","to":"DPS","from_city":"Bengaluru","to_city":"Bali","distance_km":4803,"dep_delay_min":-3,"arr_delay_min":5,"duration_min":545,"dep_hour":1,"dow":5,"aircraft":"Airbus A320neo","tail":"VTIXG","is_intl":true},{"date":"2024-11-14","year":2024,"month":11,"airline":"MXD","airline_name":"Akasa Air","flight":"192","from":"DPS","to":"KUL","from_city":"Bali","to_city":"Kuala Lumpur","distance_km":1964,"dep_delay_min":36,"arr_delay_min":null,"duration_min":190,"dep_hour":12,"dow":3,"aircraft":"Boeing 737-800","tail":"9MLCG","is_intl":true},{"date":"2024-11-14","year":2024,"month":11,"airline":"MXD","airline_name":"Akasa Air","flight":"241","from":"KUL","to":"BLR","from_city":"Kuala Lumpur","to_city":"Bengaluru","distance_km":2884,"dep_delay_min":64,"arr_delay_min":57,"duration_min":100,"dep_hour":20,"dow":3,"aircraft":"Boeing 737-800","tail":"9MLNP","is_intl":true},{"date":"2024-11-20","year":2024,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"747","from":"BLR","to":"IDR","from_city":"Bengaluru","to_city":"Indore","distance_km":1078,"dep_delay_min":-3,"arr_delay_min":null,"duration_min":125,"dep_hour":21,"dow":2,"aircraft":"Airbus A320neo","tail":"VTITN","is_intl":false},{"date":"2024-12-05","year":2024,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"2439","from":"IXD","to":"DEL","from_city":"Prayagraj","to_city":"New Delhi","distance_km":575,"dep_delay_min":0,"arr_delay_min":-17,"duration_min":85,"dep_hour":15,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIPO","is_intl":false},{"date":"2024-12-05","year":2024,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"2487","from":"DEL","to":"BLR","from_city":"New Delhi","to_city":"Bengaluru","distance_km":1709,"dep_delay_min":1,"arr_delay_min":-6,"duration_min":180,"dep_hour":19,"dow":3,"aircraft":"Airbus A321neo","tail":"VTIMC","is_intl":false},{"date":"2024-12-08","year":2024,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"1127","from":"BLR","to":"MLE","from_city":"Bengaluru","to_city":"Mal\u00e9","distance_km":1102,"dep_delay_min":0,"arr_delay_min":null,"duration_min":90,"dep_hour":13,"dow":6,"aircraft":"Airbus A321neo","tail":"VTIBJ","is_intl":true},{"date":"2024-12-13","year":2024,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"1128","from":"MLE","to":"BLR","from_city":"Mal\u00e9","to_city":"Bengaluru","distance_km":1102,"dep_delay_min":-12,"arr_delay_min":-8,"duration_min":145,"dep_hour":15,"dow":4,"aircraft":"Airbus A321neo","tail":"VTICN","is_intl":true},{"date":"2025-02-24","year":2025,"month":2,"airline":"AIC","airline_name":"Air India","flight":"2898","from":"HYD","to":"BLR","from_city":"Hyderabad","to_city":"Bengaluru","distance_km":456,"dep_delay_min":-6,"arr_delay_min":-1,"duration_min":70,"dep_hour":10,"dow":0,"aircraft":"Airbus A320neo","tail":"VTTYD","is_intl":false},{"date":"2025-03-24","year":2025,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"405","from":"BLR","to":"RPR","from_city":"Bengaluru","to_city":"Raipur","distance_km":985,"dep_delay_min":-13,"arr_delay_min":-27,"duration_min":120,"dep_hour":7,"dow":0,"aircraft":"Airbus A321neo","tail":"VTIMM","is_intl":false},{"date":"2025-03-24","year":2025,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"7302","from":"RPR","to":"IXD","from_city":"Raipur","to_city":"Prayagraj","distance_km":474,"dep_delay_min":19,"arr_delay_min":11,"duration_min":95,"dep_hour":13,"dow":0,"aircraft":"ATR 72","tail":"VT-IYG","is_intl":false},{"date":"2025-04-02","year":2025,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":-7,"arr_delay_min":21,"duration_min":145,"dep_hour":11,"dow":2,"aircraft":"Airbus A320neo","tail":"VTIZK","is_intl":false},{"date":"2025-04-24","year":2025,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"248","from":"BLR","to":"HYD","from_city":"Bengaluru","to_city":"Hyderabad","distance_km":456,"dep_delay_min":2,"arr_delay_min":3,"duration_min":70,"dep_hour":22,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIQW","is_intl":false},{"date":"2025-05-14","year":2025,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"702","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-9,"arr_delay_min":-19,"duration_min":125,"dep_hour":7,"dow":2,"aircraft":"Airbus A320neo","tail":"VTIQH","is_intl":false},{"date":"2025-05-19","year":2025,"month":5,"airline":"IGO","airline_name":"IndiGo","flight":"703","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":-9,"arr_delay_min":-18,"duration_min":135,"dep_hour":9,"dow":0,"aircraft":"Airbus A320neo","tail":"VTIIF","is_intl":false},{"date":"2025-05-22","year":2025,"month":5,"airline":"AXB","airline_name":"Air India Express","flight":"2722","from":"BLR","to":"IXR","from_city":"Bengaluru","to_city":"Ranchi","distance_km":1382,"dep_delay_min":-1,"arr_delay_min":-17,"duration_min":145,"dep_hour":9,"dow":3,"aircraft":"Airbus A320","tail":"VTHKG","is_intl":false},{"date":"2025-05-26","year":2025,"month":5,"airline":"AXB","airline_name":"Air India Express","flight":"2976","from":"IXR","to":"BLR","from_city":"Ranchi","to_city":"Bengaluru","distance_km":1382,"dep_delay_min":-5,"arr_delay_min":-2,"duration_min":145,"dep_hour":20,"dow":0,"aircraft":"Airbus A320","tail":"VTJPR","is_intl":false},{"date":"2025-06-08","year":2025,"month":6,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":-15,"arr_delay_min":-20,"duration_min":140,"dep_hour":8,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIQF","is_intl":false},{"date":"2025-06-16","year":2025,"month":6,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":-18,"arr_delay_min":-24,"duration_min":145,"dep_hour":11,"dow":0,"aircraft":"Airbus A320neo","tail":"VTIXH","is_intl":false},{"date":"2025-06-19","year":2025,"month":6,"airline":"IGO","airline_name":"IndiGo","flight":"702","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-4,"arr_delay_min":-18,"duration_min":125,"dep_hour":7,"dow":3,"aircraft":"Airbus A320neo","tail":"VTIXE","is_intl":false},{"date":"2025-06-21","year":2025,"month":6,"airline":"AXB","airline_name":"Air India Express","flight":"2705","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":8,"arr_delay_min":15,"duration_min":130,"dep_hour":21,"dow":5,"aircraft":"Airbus A320","tail":"VTATB","is_intl":false},{"date":"2025-08-07","year":2025,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"2359","from":"BLR","to":"DEL","from_city":"Bengaluru","to_city":"New Delhi","distance_km":1709,"dep_delay_min":-2,"arr_delay_min":-11,"duration_min":170,"dep_hour":21,"dow":3,"aircraft":"Airbus A321neo","tail":"VTNCB","is_intl":false},{"date":"2025-08-11","year":2025,"month":8,"airline":"IGO","airline_name":"IndiGo","flight":"2069","from":"DEL","to":"BLR","from_city":"New Delhi","to_city":"Bengaluru","distance_km":1709,"dep_delay_min":-15,"arr_delay_min":-23,"duration_min":175,"dep_hour":5,"dow":0,"aircraft":"Airbus A321neo","tail":"VTNCF","is_intl":false},{"date":"2025-09-21","year":2025,"month":9,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":-2,"arr_delay_min":0,"duration_min":140,"dep_hour":8,"dow":6,"aircraft":"Airbus A320neo","tail":"VTISP","is_intl":false},{"date":"2025-09-23","year":2025,"month":9,"airline":"SGD","airline_name":"Star Air","flight":"229","from":"LKO","to":"JRG","from_city":"Lucknow","to_city":"Jharsuguda","distance_km":627,"dep_delay_min":null,"arr_delay_min":null,"duration_min":80,"dep_hour":17,"dow":1,"aircraft":"Embraer 175","tail":null,"is_intl":false},{"date":"2025-09-25","year":2025,"month":9,"airline":"SGD","airline_name":"Star Air","flight":"228","from":"JRG","to":"LKO","from_city":"Jharsuguda","to_city":"Lucknow","distance_km":627,"dep_delay_min":null,"arr_delay_min":null,"duration_min":80,"dep_hour":8,"dow":3,"aircraft":"Embraer 175","tail":null,"is_intl":false},{"date":"2025-09-28","year":2025,"month":9,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":-10,"arr_delay_min":-26,"duration_min":155,"dep_hour":11,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIQJ","is_intl":false},{"date":"2025-10-11","year":2025,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6633","from":"BLR","to":"IXC","from_city":"Bengaluru","to_city":"Chandigarh","distance_km":1945,"dep_delay_min":-10,"arr_delay_min":-30,"duration_min":180,"dep_hour":4,"dow":5,"aircraft":"Airbus A321neo","tail":"VTICQ","is_intl":false},{"date":"2025-10-13","year":2025,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"593","from":"IXC","to":"BLR","from_city":"Chandigarh","to_city":"Bengaluru","distance_km":1945,"dep_delay_min":16,"arr_delay_min":14,"duration_min":190,"dep_hour":19,"dow":0,"aircraft":"Airbus A320neo","tail":"VTIQW","is_intl":false},{"date":"2025-10-17","year":2025,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6035","from":"BLR","to":"IXD","from_city":"Bengaluru","to_city":"Prayagraj","distance_km":1425,"dep_delay_min":-11,"arr_delay_min":-6,"duration_min":140,"dep_hour":8,"dow":4,"aircraft":"Airbus A320neo","tail":"VTIJX","is_intl":false},{"date":"2025-10-22","year":2025,"month":10,"airline":"IGO","airline_name":"IndiGo","flight":"6036","from":"IXD","to":"BLR","from_city":"Prayagraj","to_city":"Bengaluru","distance_km":1425,"dep_delay_min":-1,"arr_delay_min":-6,"duration_min":155,"dep_hour":11,"dow":2,"aircraft":"Airbus A320neo","tail":"VTIQI","is_intl":false},{"date":"2025-10-26","year":2025,"month":10,"airline":"AXB","airline_name":"Air India Express","flight":"1215","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":0,"arr_delay_min":-25,"duration_min":130,"dep_hour":7,"dow":6,"aircraft":"Airbus A320neo","tail":"VTATE","is_intl":false},{"date":"2025-11-12","year":2025,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"703","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":27,"arr_delay_min":24,"duration_min":130,"dep_hour":10,"dow":2,"aircraft":"Airbus A321neo","tail":"VTIRY","is_intl":false},{"date":"2025-11-16","year":2025,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"530","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":5,"arr_delay_min":-8,"duration_min":135,"dep_hour":21,"dow":6,"aircraft":"Airbus A320","tail":"VTIKK","is_intl":false},{"date":"2025-11-23","year":2025,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"7035","from":"BBI","to":"IXD","from_city":"Bhubaneswar","to_city":"Prayagraj","distance_km":713,"dep_delay_min":-1,"arr_delay_min":-5,"duration_min":125,"dep_hour":8,"dow":6,"aircraft":"ATR 72","tail":"VTIRQ","is_intl":false},{"date":"2025-11-25","year":2025,"month":11,"airline":"IGO","airline_name":"IndiGo","flight":"7266","from":"IXD","to":"BBI","from_city":"Prayagraj","to_city":"Bhubaneswar","distance_km":713,"dep_delay_min":-15,"arr_delay_min":-24,"duration_min":110,"dep_hour":11,"dow":1,"aircraft":"ATR 72","tail":"VTIRQ","is_intl":false},{"date":"2025-12-04","year":2025,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"703","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":961,"arr_delay_min":958,"duration_min":130,"dep_hour":10,"dow":3,"aircraft":"Airbus A321neo","tail":"VTILD","is_intl":false},{"date":"2025-12-08","year":2025,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"6535","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-1,"arr_delay_min":-12,"duration_min":130,"dep_hour":11,"dow":0,"aircraft":"Airbus A321neo","tail":"VTIMZ","is_intl":false},{"date":"2025-12-25","year":2025,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"6912","from":"BBI","to":"HYD","from_city":"Bhubaneswar","to_city":"Hyderabad","distance_km":847,"dep_delay_min":83,"arr_delay_min":82,"duration_min":100,"dep_hour":14,"dow":3,"aircraft":"Airbus A321neo","tail":"VTILV","is_intl":false},{"date":"2025-12-29","year":2025,"month":12,"airline":"IGO","airline_name":"IndiGo","flight":"6066","from":"HYD","to":"BLR","from_city":"Hyderabad","to_city":"Bengaluru","distance_km":456,"dep_delay_min":-1,"arr_delay_min":-9,"duration_min":80,"dep_hour":9,"dow":0,"aircraft":"Airbus A321neo","tail":"VTILB","is_intl":false},{"date":"2026-01-04","year":2026,"month":1,"airline":"AXB","airline_name":"Air India Express","flight":"1181","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":15,"arr_delay_min":35,"duration_min":110,"dep_hour":18,"dow":6,"aircraft":"Boeing 737 MAX 8","tail":"VTBXM","is_intl":false},{"date":"2026-01-16","year":2026,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"611","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":-4,"arr_delay_min":-18,"duration_min":135,"dep_hour":22,"dow":4,"aircraft":"Airbus A321","tail":"VTNHM","is_intl":false},{"date":"2026-01-19","year":2026,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"702","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-11,"arr_delay_min":-7,"duration_min":115,"dep_hour":7,"dow":0,"aircraft":"Airbus A321neo","tail":"VTIBY","is_intl":false},{"date":"2026-01-24","year":2026,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"7361","from":"BBI","to":"IXR","from_city":"Bhubaneswar","to_city":"Ranchi","distance_km":345,"dep_delay_min":-5,"arr_delay_min":10,"duration_min":75,"dep_hour":18,"dow":5,"aircraft":"ATR 72","tail":"VTIRA","is_intl":false},{"date":"2026-01-26","year":2026,"month":1,"airline":"IGO","airline_name":"IndiGo","flight":"7362","from":"IXR","to":"BBI","from_city":"Ranchi","to_city":"Bhubaneswar","distance_km":345,"dep_delay_min":-2,"arr_delay_min":-3,"duration_min":75,"dep_hour":20,"dow":0,"aircraft":"ATR 72","tail":"VTIRA","is_intl":false},{"date":"2026-01-31","year":2026,"month":1,"airline":"AXB","airline_name":"Air India Express","flight":"1045","from":"BBI","to":"DEL","from_city":"Bhubaneswar","to_city":"New Delhi","distance_km":1277,"dep_delay_min":16,"arr_delay_min":-2,"duration_min":175,"dep_hour":0,"dow":5,"aircraft":"Boeing 737 MAX 8","tail":"VTBXX","is_intl":false},{"date":"2026-02-03","year":2026,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"508","from":"DEL","to":"BBI","from_city":"New Delhi","to_city":"Bhubaneswar","distance_km":1277,"dep_delay_min":8,"arr_delay_min":12,"duration_min":125,"dep_hour":5,"dow":1,"aircraft":"Boeing 737-800","tail":"TCTJR","is_intl":false},{"date":"2026-02-14","year":2026,"month":2,"airline":"AXB","airline_name":"Air India Express","flight":"2780","from":"BBI","to":"BLR","from_city":"Bhubaneswar","to_city":"Bengaluru","distance_km":1166,"dep_delay_min":-8,"arr_delay_min":-21,"duration_min":135,"dep_hour":5,"dow":5,"aircraft":"Boeing 737 MAX 8","tail":"VTBWV","is_intl":false},{"date":"2026-02-16","year":2026,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"6535","from":"BLR","to":"BBI","from_city":"Bengaluru","to_city":"Bhubaneswar","distance_km":1166,"dep_delay_min":-15,"arr_delay_min":-21,"duration_min":130,"dep_hour":11,"dow":0,"aircraft":"Airbus A321neo","tail":"VTILN","is_intl":false},{"date":"2026-02-20","year":2026,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"1487","from":"BBI","to":"DXB","from_city":"Bhubaneswar","to_city":"Dubai","distance_km":3165,"dep_delay_min":-26,"arr_delay_min":-27,"duration_min":215,"dep_hour":18,"dow":4,"aircraft":"Airbus A320neo","tail":"VTIOI","is_intl":true},{"date":"2026-02-24","year":2026,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"1466","from":"DXB","to":"HYD","from_city":"Dubai","to_city":"Hyderabad","distance_km":2546,"dep_delay_min":-8,"arr_delay_min":-2,"duration_min":300,"dep_hour":22,"dow":1,"aircraft":"Airbus A320neo","tail":"VTISW","is_intl":true},{"date":"2026-02-25","year":2026,"month":2,"airline":"IGO","airline_name":"IndiGo","flight":"6242","from":"HYD","to":"BBI","from_city":"Hyderabad","to_city":"Bhubaneswar","distance_km":847,"dep_delay_min":-12,"arr_delay_min":4,"duration_min":85,"dep_hour":7,"dow":2,"aircraft":"Airbus A321neo","tail":"VTIMZ","is_intl":false},{"date":"2026-03-27","year":2026,"month":3,"airline":"AXB","airline_name":"Air India Express","flight":"1060","from":"BBI","to":"DEL","from_city":"Bhubaneswar","to_city":"New Delhi","distance_km":1277,"dep_delay_min":-10,"arr_delay_min":-50,"duration_min":175,"dep_hour":6,"dow":4,"aircraft":"Boeing 737 MAX 8","tail":"VTBWG","is_intl":false},{"date":"2026-03-29","year":2026,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"6394","from":"IXC","to":"PAT","from_city":"Chandigarh","to_city":"Patna","distance_km":990,"dep_delay_min":-20,"arr_delay_min":-35,"duration_min":110,"dep_hour":7,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIZD","is_intl":false},{"date":"2026-03-29","year":2026,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"6394","from":"PAT","to":"BBI","from_city":"Patna","to_city":"Bhubaneswar","distance_km":599,"dep_delay_min":-16,"arr_delay_min":-24,"duration_min":75,"dep_hour":9,"dow":6,"aircraft":"Airbus A320neo","tail":"VTIZD","is_intl":false},{"date":"2024-04-06","year":2024,"month":4,"airline":"IGO","airline_name":"IndiGo","flight":"781","from":"DEL","to":"BLR","from_city":"New Delhi","to_city":"Bengaluru","distance_km":1709,"dep_delay_min":-1,"arr_delay_min":2,"duration_min":165,"dep_hour":16,"dow":5,"aircraft":"Airbus A321neo","tail":"VTIUE","is_intl":false},{"date":"2020-03-02","year":2020,"month":3,"airline":"IGO","airline_name":"IndiGo","flight":"266","from":"HYD","to":"BBI","from_city":"Hyderabad","to_city":"Bhubaneswar","distance_km":847,"dep_delay_min":null,"arr_delay_min":null,"duration_min":100,"dep_hour":7,"dow":0,"aircraft":null,"tail":null,"is_intl":false}],"airports":{"DEL":{"lat":28.5562,"lon":77.1,"city":"New Delhi","country":"IN"},"BOM":{"lat":19.0896,"lon":72.8656,"city":"Mumbai","country":"IN"},"BLR":{"lat":13.1986,"lon":77.7066,"city":"Bengaluru","country":"IN"},"MAA":{"lat":12.9941,"lon":80.1709,"city":"Chennai","country":"IN"},"CCU":{"lat":22.6547,"lon":88.4467,"city":"Kolkata","country":"IN"},"HYD":{"lat":17.2403,"lon":78.4294,"city":"Hyderabad","country":"IN"},"GOI":{"lat":15.3808,"lon":73.8314,"city":"Goa","country":"IN"},"BBI":{"lat":20.2444,"lon":85.8178,"city":"Bhubaneswar","country":"IN"},"VNS":{"lat":25.4524,"lon":82.8593,"city":"Varanasi","country":"IN"},"LKO":{"lat":26.7606,"lon":80.8893,"city":"Lucknow","country":"IN"},"PAT":{"lat":25.5913,"lon":85.088,"city":"Patna","country":"IN"},"IXJ":{"lat":32.6891,"lon":74.8374,"city":"Jammu","country":"IN"},"IXC":{"lat":30.6735,"lon":76.7885,"city":"Chandigarh","country":"IN"},"IXR":{"lat":23.3143,"lon":85.3217,"city":"Ranchi","country":"IN"},"IDR":{"lat":22.7218,"lon":75.8011,"city":"Indore","country":"IN"},"RPR":{"lat":21.1804,"lon":81.7388,"city":"Raipur","country":"IN"},"IXD":{"lat":25.4401,"lon":81.734,"city":"Prayagraj","country":"IN"},"JRG":{"lat":21.9134,"lon":84.0504,"city":"Jharsuguda","country":"IN"},"BHO":{"lat":23.2875,"lon":77.3374,"city":"Bhopal","country":"IN"},"SIN":{"lat":1.3644,"lon":103.9915,"city":"Singapore","country":"SG"},"DPS":{"lat":-8.7482,"lon":115.1671,"city":"Bali","country":"ID"},"KUL":{"lat":2.7456,"lon":101.7099,"city":"Kuala Lumpur","country":"MY"},"MLE":{"lat":4.1918,"lon":73.529,"city":"Mal\u00e9","country":"MV"},"DXB":{"lat":25.2532,"lon":55.3657,"city":"Dubai","country":"AE"}},"airline_names":{"IGO":"IndiGo","AIC":"Air India","AXB":"Air India Express","VTI":"Vistara","JAI":"Jet Airways","SEJ":"SpiceJet","IAD":"Indian Airlines","MXD":"Akasa Air","SGD":"Star Air","GOW":"GoAir","AKJ":"AirAsia India"},"health":{"hrv_series":[{"d":"2023-02-28","v":41.0},{"d":"2023-03-01","v":36.5},{"d":"2023-03-02","v":21.0},{"d":"2023-03-03","v":39.4},{"d":"2023-03-04","v":75.2},{"d":"2023-03-05","v":24.9},{"d":"2023-03-06","v":39.7},{"d":"2023-03-07","v":28.2},{"d":"2023-03-08","v":20.2},{"d":"2023-03-09","v":37.9},{"d":"2023-03-10","v":46.5},{"d":"2023-03-11","v":34.4},{"d":"2023-03-12","v":30.9},{"d":"2023-03-13","v":43.6},{"d":"2023-03-14","v":37.8},{"d":"2023-03-15","v":109.1},{"d":"2023-03-16","v":15.3},{"d":"2023-03-17","v":26.3},{"d":"2023-03-19","v":62.4},{"d":"2023-03-20","v":25.4},{"d":"2023-03-22","v":31.9},{"d":"2023-03-23","v":44.6},{"d":"2023-03-24","v":41.1},{"d":"2023-03-25","v":31.5},{"d":"2023-03-26","v":36.6},{"d":"2023-03-27","v":29.5},{"d":"2023-03-28","v":68.3},{"d":"2023-03-29","v":15.2},{"d":"2023-03-31","v":49.9},{"d":"2023-04-01","v":40.9},{"d":"2023-04-02","v":27.7},{"d":"2023-04-03","v":36.1},{"d":"2023-04-05","v":46.2},{"d":"2023-04-06","v":40.3},{"d":"2023-04-07","v":33.8},{"d":"2023-04-08","v":20.6},{"d":"2023-04-09","v":32.2},{"d":"2023-04-11","v":24.0},{"d":"2023-04-12","v":47.1},{"d":"2023-04-13","v":20.8},{"d":"2023-04-15","v":23.8},{"d":"2023-04-16","v":47.7},{"d":"2023-04-17","v":38.3},{"d":"2023-04-18","v":28.7},{"d":"2023-04-19","v":40.5},{"d":"2023-04-23","v":22.4},{"d":"2023-04-25","v":31.9},{"d":"2023-04-26","v":42.8},{"d":"2023-04-29","v":17.8},{"d":"2023-04-30","v":30.5},{"d":"2023-05-01","v":24.5},{"d":"2023-05-05","v":27.4},{"d":"2023-05-06","v":21.3},{"d":"2023-05-07","v":32.5},{"d":"2023-05-10","v":29.5},{"d":"2023-05-12","v":24.7},{"d":"2023-05-13","v":22.1},{"d":"2023-05-14","v":29.6},{"d":"2023-05-15","v":24.8},{"d":"2023-05-16","v":10.6},{"d":"2023-05-17","v":22.8},{"d":"2023-05-20","v":58.0},{"d":"2023-05-21","v":31.8},{"d":"2023-05-25","v":36.2},{"d":"2023-05-26","v":79.2},{"d":"2023-05-27","v":65.7},{"d":"2023-05-28","v":29.6},{"d":"2023-05-29","v":55.7},{"d":"2023-05-30","v":52.5},{"d":"2023-05-31","v":117.1},{"d":"2023-06-02","v":63.7},{"d":"2023-06-03","v":79.6},{"d":"2023-06-04","v":56.4},{"d":"2023-06-05","v":59.6},{"d":"2023-06-06","v":60.7},{"d":"2023-06-07","v":65.6},{"d":"2023-06-08","v":55.9},{"d":"2023-06-09","v":57.7},{"d":"2023-06-10","v":66.1},{"d":"2023-06-11","v":49.6},{"d":"2023-06-12","v":29.9},{"d":"2023-06-13","v":60.6},{"d":"2023-06-14","v":56.4},{"d":"2023-06-15","v":64.3},{"d":"2023-06-16","v":82.2},{"d":"2023-06-17","v":39.9},{"d":"2023-06-18","v":28.2},{"d":"2023-06-19","v":30.3},{"d":"2023-06-20","v":26.6},{"d":"2023-06-23","v":22.6},{"d":"2023-06-24","v":94.8},{"d":"2023-06-25","v":39.2},{"d":"2023-06-26","v":43.3},{"d":"2023-06-27","v":26.4},{"d":"2023-06-28","v":34.2},{"d":"2023-06-29","v":43.4},{"d":"2023-06-30","v":32.3},{"d":"2023-07-01","v":43.3},{"d":"2023-07-02","v":18.9},{"d":"2023-07-03","v":35.9},{"d":"2023-07-05","v":37.6},{"d":"2023-07-06","v":37.9},{"d":"2023-07-07","v":41.6},{"d":"2023-07-08","v":55.0},{"d":"2023-07-09","v":40.0},{"d":"2023-07-10","v":74.4},{"d":"2023-07-14","v":35.5},{"d":"2023-07-15","v":50.4},{"d":"2023-07-16","v":56.9},{"d":"2023-07-20","v":43.0},{"d":"2023-07-21","v":34.9},{"d":"2023-07-22","v":50.3},{"d":"2023-07-23","v":39.3},{"d":"2023-07-24","v":56.5},{"d":"2023-07-25","v":53.1},{"d":"2023-07-26","v":66.8},{"d":"2023-07-27","v":35.4},{"d":"2023-07-28","v":44.3},{"d":"2023-07-29","v":61.4},{"d":"2023-07-30","v":45.7},{"d":"2023-07-31","v":38.7},{"d":"2023-08-01","v":39.8},{"d":"2023-08-02","v":36.7},{"d":"2023-08-03","v":29.9},{"d":"2023-08-04","v":46.6},{"d":"2023-08-05","v":31.2},{"d":"2023-08-06","v":48.9},{"d":"2023-08-07","v":32.5},{"d":"2023-08-08","v":42.6},{"d":"2023-08-09","v":21.4},{"d":"2023-08-10","v":31.4},{"d":"2023-08-12","v":25.9},{"d":"2023-08-13","v":26.6},{"d":"2023-08-14","v":63.6},{"d":"2023-08-15","v":13.9},{"d":"2023-08-16","v":18.3},{"d":"2023-10-01","v":31.0},{"d":"2023-10-02","v":51.6},{"d":"2023-10-03","v":35.7},{"d":"2023-10-06","v":44.5},{"d":"2023-10-07","v":40.3},{"d":"2023-10-08","v":41.3},{"d":"2023-10-09","v":38.5},{"d":"2023-10-10","v":39.1},{"d":"2023-10-11","v":41.1},{"d":"2023-10-12","v":51.6},{"d":"2023-10-13","v":43.4},{"d":"2023-10-14","v":48.1},{"d":"2023-10-15","v":57.5},{"d":"2023-10-16","v":41.6},{"d":"2023-10-17","v":49.0},{"d":"2023-10-18","v":31.2},{"d":"2023-10-19","v":31.5},{"d":"2023-10-20","v":41.4},{"d":"2023-10-21","v":36.5},{"d":"2023-10-22","v":29.5},{"d":"2023-10-23","v":95.9},{"d":"2023-10-24","v":33.8},{"d":"2023-10-25","v":32.8},{"d":"2023-10-26","v":37.6},{"d":"2023-10-27","v":52.1},{"d":"2023-10-28","v":35.3},{"d":"2023-10-29","v":21.3},{"d":"2023-10-30","v":27.9},{"d":"2023-10-31","v":38.4},{"d":"2023-11-01","v":35.1},{"d":"2023-11-02","v":20.1},{"d":"2023-11-03","v":44.5},{"d":"2023-11-04","v":34.3},{"d":"2023-11-05","v":24.6},{"d":"2023-11-06","v":36.4},{"d":"2023-11-08","v":36.7},{"d":"2023-11-09","v":45.5},{"d":"2023-11-10","v":16.5},{"d":"2023-11-11","v":39.5},{"d":"2023-11-12","v":43.2},{"d":"2023-11-13","v":36.4},{"d":"2023-11-14","v":54.5},{"d":"2023-11-15","v":29.4},{"d":"2023-11-16","v":39.7},{"d":"2023-11-17","v":45.3},{"d":"2023-11-18","v":31.9},{"d":"2023-11-19","v":26.4},{"d":"2023-11-20","v":39.7},{"d":"2023-11-21","v":50.3},{"d":"2023-11-22","v":35.8},{"d":"2023-11-23","v":41.9},{"d":"2023-11-24","v":44.8},{"d":"2023-11-25","v":45.8},{"d":"2023-11-26","v":55.8},{"d":"2023-11-27","v":53.3},{"d":"2023-11-28","v":42.1},{"d":"2023-11-29","v":61.7},{"d":"2023-11-30","v":43.5},{"d":"2023-12-03","v":41.1},{"d":"2023-12-04","v":38.6},{"d":"2023-12-05","v":36.1},{"d":"2023-12-06","v":26.7},{"d":"2023-12-07","v":39.6},{"d":"2023-12-08","v":68.1},{"d":"2023-12-09","v":56.6},{"d":"2023-12-10","v":29.4},{"d":"2023-12-11","v":42.4},{"d":"2023-12-12","v":57.4},{"d":"2023-12-13","v":43.8},{"d":"2023-12-14","v":51.4},{"d":"2023-12-15","v":47.2},{"d":"2023-12-16","v":50.7},{"d":"2023-12-17","v":48.3},{"d":"2023-12-18","v":54.2},{"d":"2023-12-19","v":44.8},{"d":"2023-12-20","v":53.6},{"d":"2023-12-21","v":58.8},{"d":"2023-12-22","v":44.8},{"d":"2023-12-23","v":46.4},{"d":"2023-12-24","v":36.0},{"d":"2023-12-25","v":20.3},{"d":"2023-12-26","v":38.9},{"d":"2023-12-27","v":29.1},{"d":"2023-12-28","v":35.3},{"d":"2023-12-29","v":29.6},{"d":"2023-12-30","v":63.0},{"d":"2023-12-31","v":17.8},{"d":"2024-01-01","v":41.5},{"d":"2024-01-02","v":49.4},{"d":"2024-01-03","v":36.6},{"d":"2024-01-04","v":48.8},{"d":"2024-01-06","v":41.2},{"d":"2024-01-07","v":46.9},{"d":"2024-01-08","v":45.3},{"d":"2024-01-09","v":77.8},{"d":"2024-01-10","v":31.3},{"d":"2024-01-11","v":46.3},{"d":"2024-01-12","v":42.7},{"d":"2024-01-13","v":36.3},{"d":"2024-01-14","v":35.9},{"d":"2024-01-15","v":61.5},{"d":"2024-01-16","v":55.0},{"d":"2024-01-17","v":42.2},{"d":"2024-01-19","v":28.7},{"d":"2024-01-20","v":47.2},{"d":"2024-01-21","v":42.6},{"d":"2024-01-22","v":56.0},{"d":"2024-01-23","v":44.9},{"d":"2024-01-25","v":33.3},{"d":"2024-01-26","v":24.4},{"d":"2024-01-27","v":29.9},{"d":"2024-01-28","v":33.9},{"d":"2024-01-29","v":23.6},{"d":"2024-01-30","v":24.4},{"d":"2024-01-31","v":27.2},{"d":"2024-02-01","v":31.6},{"d":"2024-02-02","v":25.5},{"d":"2024-02-03","v":33.2},{"d":"2024-02-04","v":41.7},{"d":"2024-02-05","v":24.3},{"d":"2024-02-07","v":44.6},{"d":"2024-02-08","v":20.5},{"d":"2024-02-09","v":44.6},{"d":"2024-02-10","v":27.4},{"d":"2024-02-11","v":41.8},{"d":"2024-02-12","v":53.7},{"d":"2024-02-13","v":86.3},{"d":"2024-02-14","v":15.7},{"d":"2024-02-15","v":46.5},{"d":"2024-02-16","v":38.6},{"d":"2024-02-17","v":35.9},{"d":"2024-02-18","v":27.9},{"d":"2024-02-19","v":33.1},{"d":"2024-02-20","v":35.2},{"d":"2024-02-21","v":45.0},{"d":"2024-02-23","v":25.1},{"d":"2024-02-24","v":40.8},{"d":"2024-02-25","v":34.3},{"d":"2024-03-01","v":41.9},{"d":"2024-03-02","v":36.6},{"d":"2024-03-03","v":53.3},{"d":"2024-03-06","v":42.4},{"d":"2024-03-07","v":56.3},{"d":"2024-03-08","v":67.7},{"d":"2024-03-09","v":39.7},{"d":"2024-03-10","v":70.8},{"d":"2024-03-12","v":84.5},{"d":"2024-03-15","v":53.7},{"d":"2024-03-16","v":51.8},{"d":"2024-03-19","v":46.6},{"d":"2024-03-20","v":51.1},{"d":"2024-03-21","v":55.8},{"d":"2024-03-23","v":44.2},{"d":"2024-03-24","v":51.7},{"d":"2024-03-25","v":41.5},{"d":"2024-04-03","v":56.7},{"d":"2024-04-13","v":23.5},{"d":"2024-04-14","v":43.3},{"d":"2024-04-19","v":35.9},{"d":"2024-04-23","v":18.6},{"d":"2024-05-23","v":36.3},{"d":"2024-05-24","v":43.8},{"d":"2024-06-22","v":29.1},{"d":"2024-06-23","v":34.9},{"d":"2024-06-24","v":40.6},{"d":"2024-06-29","v":50.0},{"d":"2024-06-30","v":47.8},{"d":"2024-07-01","v":50.3},{"d":"2024-07-02","v":30.6},{"d":"2024-07-03","v":43.9},{"d":"2024-07-16","v":35.0},{"d":"2024-07-26","v":36.2},{"d":"2024-07-27","v":21.0},{"d":"2024-07-28","v":35.6},{"d":"2024-07-31","v":36.4},{"d":"2024-08-01","v":35.4},{"d":"2024-08-02","v":42.1},{"d":"2024-08-03","v":44.3},{"d":"2024-08-04","v":27.6},{"d":"2024-08-06","v":34.4},{"d":"2024-08-07","v":51.3},{"d":"2025-01-01","v":59.7},{"d":"2025-01-02","v":47.2},{"d":"2025-01-03","v":67.0},{"d":"2025-01-07","v":37.8},{"d":"2025-01-08","v":49.6},{"d":"2025-01-09","v":71.3},{"d":"2025-01-10","v":56.2},{"d":"2025-01-11","v":69.9},{"d":"2025-01-12","v":49.1},{"d":"2025-01-13","v":50.6},{"d":"2025-01-14","v":49.9},{"d":"2025-01-15","v":37.5},{"d":"2025-01-16","v":54.2},{"d":"2025-01-17","v":54.1},{"d":"2025-01-18","v":48.6},{"d":"2025-01-19","v":43.7},{"d":"2025-01-21","v":37.9},{"d":"2025-01-22","v":61.9},{"d":"2025-01-24","v":24.2},{"d":"2025-01-25","v":43.8},{"d":"2025-01-26","v":70.9},{"d":"2025-01-27","v":65.5},{"d":"2025-01-28","v":48.9},{"d":"2025-01-29","v":83.6},{"d":"2025-01-30","v":53.3},{"d":"2025-01-31","v":48.8},{"d":"2025-02-01","v":44.6},{"d":"2025-02-02","v":46.5},{"d":"2025-02-03","v":53.5},{"d":"2025-02-04","v":49.8},{"d":"2025-02-08","v":57.0},{"d":"2025-02-18","v":32.3},{"d":"2025-02-19","v":42.4},{"d":"2025-02-20","v":41.6},{"d":"2025-03-16","v":33.3},{"d":"2025-04-13","v":42.4},{"d":"2025-04-14","v":58.1},{"d":"2025-04-15","v":40.6},{"d":"2025-04-16","v":38.5},{"d":"2025-04-22","v":34.2},{"d":"2025-04-23","v":73.8},{"d":"2025-04-24","v":28.5},{"d":"2025-04-25","v":37.0},{"d":"2025-04-26","v":30.9},{"d":"2025-04-27","v":29.0},{"d":"2025-05-03","v":24.6},{"d":"2025-05-04","v":50.3},{"d":"2025-05-05","v":56.8},{"d":"2025-05-06","v":27.9},{"d":"2025-05-07","v":82.8},{"d":"2025-05-12","v":43.5},{"d":"2025-05-13","v":51.2},{"d":"2025-05-31","v":30.0},{"d":"2025-06-01","v":44.9},{"d":"2025-06-06","v":68.3},{"d":"2025-06-07","v":35.5},{"d":"2025-06-08","v":76.9},{"d":"2025-06-13","v":40.2},{"d":"2025-06-14","v":45.2},{"d":"2025-06-15","v":21.3},{"d":"2025-06-16","v":32.7},{"d":"2025-06-19","v":48.1},{"d":"2025-06-20","v":47.4},{"d":"2025-06-21","v":37.3},{"d":"2025-06-22","v":35.5},{"d":"2025-06-26","v":44.9},{"d":"2025-06-27","v":52.6},{"d":"2025-06-28","v":67.6},{"d":"2025-06-29","v":20.2},{"d":"2025-06-30","v":59.1},{"d":"2025-07-01","v":22.4},{"d":"2025-07-02","v":45.8},{"d":"2025-07-03","v":42.2},{"d":"2025-07-04","v":45.5},{"d":"2025-07-05","v":31.9},{"d":"2025-07-06","v":49.4},{"d":"2025-07-07","v":48.3},{"d":"2025-07-08","v":50.8},{"d":"2025-07-09","v":43.8},{"d":"2025-07-10","v":44.4},{"d":"2025-07-11","v":53.8},{"d":"2025-07-12","v":28.9},{"d":"2025-07-13","v":69.0},{"d":"2025-07-14","v":52.6},{"d":"2025-07-15","v":52.3},{"d":"2025-07-16","v":58.2},{"d":"2025-07-17","v":43.4},{"d":"2025-07-18","v":62.4},{"d":"2025-07-19","v":36.7},{"d":"2025-07-20","v":69.8},{"d":"2025-07-22","v":73.9},{"d":"2025-07-23","v":56.2},{"d":"2025-07-24","v":43.2},{"d":"2025-07-25","v":72.1},{"d":"2025-07-26","v":60.2},{"d":"2025-07-27","v":48.6},{"d":"2025-07-28","v":51.0},{"d":"2025-07-29","v":54.2},{"d":"2025-07-30","v":26.2},{"d":"2025-07-31","v":39.7},{"d":"2025-08-01","v":46.2},{"d":"2025-08-02","v":63.1},{"d":"2025-08-03","v":54.5},{"d":"2025-08-04","v":47.0},{"d":"2025-08-05","v":48.1},{"d":"2025-08-06","v":43.3},{"d":"2025-08-07","v":66.4},{"d":"2025-08-08","v":45.9},{"d":"2025-08-09","v":43.0},{"d":"2025-08-10","v":43.0},{"d":"2025-08-11","v":71.6},{"d":"2025-08-12","v":48.2},{"d":"2025-08-13","v":33.8},{"d":"2025-08-14","v":35.6},{"d":"2025-08-15","v":41.6},{"d":"2025-08-16","v":50.1},{"d":"2025-08-17","v":48.0},{"d":"2025-08-19","v":43.7},{"d":"2025-08-20","v":47.5},{"d":"2025-08-21","v":40.7},{"d":"2025-08-22","v":47.7},{"d":"2025-08-23","v":66.2},{"d":"2025-08-24","v":31.2},{"d":"2025-08-25","v":60.7},{"d":"2025-08-26","v":53.5},{"d":"2025-08-28","v":45.6},{"d":"2025-08-29","v":62.3},{"d":"2025-08-30","v":56.2},{"d":"2025-08-31","v":67.4},{"d":"2025-09-01","v":42.9},{"d":"2025-09-02","v":59.3},{"d":"2025-09-03","v":30.9},{"d":"2025-09-04","v":36.0},{"d":"2025-09-05","v":42.3},{"d":"2025-09-06","v":50.9},{"d":"2025-09-12","v":53.7},{"d":"2025-09-13","v":40.4},{"d":"2025-09-15","v":17.5},{"d":"2025-09-16","v":16.4},{"d":"2025-09-17","v":25.9},{"d":"2025-09-18","v":45.9},{"d":"2025-09-19","v":65.6},{"d":"2025-09-21","v":42.5},{"d":"2025-09-24","v":47.9},{"d":"2025-09-26","v":44.4},{"d":"2025-09-27","v":64.1},{"d":"2025-09-28","v":40.3},{"d":"2025-09-29","v":30.1},{"d":"2025-09-30","v":38.4},{"d":"2025-10-01","v":38.4},{"d":"2025-10-03","v":46.4},{"d":"2025-10-04","v":38.6},{"d":"2025-10-05","v":42.4},{"d":"2025-10-08","v":64.1},{"d":"2025-10-09","v":68.6},{"d":"2025-10-10","v":43.0},{"d":"2025-10-17","v":38.0},{"d":"2025-10-22","v":17.5},{"d":"2025-10-23","v":32.5},{"d":"2025-11-03","v":42.9},{"d":"2025-11-04","v":39.8},{"d":"2025-11-05","v":52.6},{"d":"2025-11-06","v":86.7},{"d":"2025-11-07","v":58.6},{"d":"2025-11-08","v":51.2},{"d":"2025-11-09","v":53.4},{"d":"2025-11-10","v":57.2},{"d":"2025-11-11","v":42.3},{"d":"2025-11-12","v":49.9},{"d":"2025-11-13","v":65.8},{"d":"2025-11-14","v":61.3},{"d":"2025-11-15","v":22.0},{"d":"2025-11-16","v":50.8},{"d":"2025-11-17","v":50.5},{"d":"2025-11-18","v":57.9},{"d":"2025-11-19","v":40.4},{"d":"2025-11-20","v":48.9},{"d":"2025-11-21","v":52.7},{"d":"2025-11-26","v":29.2},{"d":"2025-11-27","v":67.5},{"d":"2025-11-28","v":34.8},{"d":"2025-12-01","v":54.9},{"d":"2025-12-02","v":29.9},{"d":"2025-12-03","v":37.9},{"d":"2025-12-04","v":42.1},{"d":"2025-12-05","v":39.1},{"d":"2025-12-08","v":46.8},{"d":"2025-12-09","v":31.5},{"d":"2025-12-10","v":27.9},{"d":"2025-12-11","v":38.8},{"d":"2025-12-12","v":46.4},{"d":"2025-12-13","v":62.6},{"d":"2025-12-15","v":37.3},{"d":"2025-12-16","v":75.4},{"d":"2025-12-17","v":41.1},{"d":"2025-12-18","v":49.5},{"d":"2025-12-19","v":37.0},{"d":"2025-12-20","v":66.6},{"d":"2025-12-21","v":37.6},{"d":"2025-12-22","v":55.0},{"d":"2025-12-23","v":39.9},{"d":"2025-12-24","v":66.2},{"d":"2025-12-30","v":33.0},{"d":"2025-12-31","v":32.6},{"d":"2026-01-01","v":20.1},{"d":"2026-01-02","v":37.5},{"d":"2026-01-04","v":32.4},{"d":"2026-01-05","v":53.2},{"d":"2026-01-06","v":44.6},{"d":"2026-01-07","v":40.7},{"d":"2026-01-08","v":37.3},{"d":"2026-01-09","v":47.1},{"d":"2026-01-10","v":45.8},{"d":"2026-01-11","v":48.4},{"d":"2026-01-12","v":48.4},{"d":"2026-01-13","v":39.1},{"d":"2026-01-14","v":47.3},{"d":"2026-01-15","v":29.0},{"d":"2026-01-16","v":55.2},{"d":"2026-01-17","v":43.2},{"d":"2026-01-18","v":28.0},{"d":"2026-01-19","v":39.3},{"d":"2026-01-20","v":46.5},{"d":"2026-01-21","v":59.1},{"d":"2026-01-22","v":44.9},{"d":"2026-01-23","v":107.4},{"d":"2026-01-24","v":52.3},{"d":"2026-01-25","v":39.2},{"d":"2026-01-26","v":38.7},{"d":"2026-01-27","v":43.2},{"d":"2026-01-28","v":48.3},{"d":"2026-01-29","v":47.9},{"d":"2026-01-30","v":56.2},{"d":"2026-01-31","v":63.3},{"d":"2026-02-01","v":50.2},{"d":"2026-02-02","v":50.1},{"d":"2026-02-03","v":43.0},{"d":"2026-02-04","v":48.9},{"d":"2026-02-05","v":47.5},{"d":"2026-02-06","v":55.9},{"d":"2026-02-07","v":45.0},{"d":"2026-02-08","v":42.3},{"d":"2026-02-09","v":40.4},{"d":"2026-02-10","v":37.0},{"d":"2026-02-11","v":45.4},{"d":"2026-02-12","v":44.1},{"d":"2026-02-13","v":50.7},{"d":"2026-02-14","v":40.7},{"d":"2026-02-15","v":48.6},{"d":"2026-02-17","v":41.6},{"d":"2026-02-18","v":27.5},{"d":"2026-02-19","v":62.6},{"d":"2026-02-20","v":28.0},{"d":"2026-02-21","v":29.0},{"d":"2026-02-22","v":36.5},{"d":"2026-02-23","v":46.1},{"d":"2026-02-24","v":36.0},{"d":"2026-02-25","v":42.9},{"d":"2026-02-26","v":47.8},{"d":"2026-02-27","v":52.2},{"d":"2026-03-01","v":20.1},{"d":"2026-03-02","v":36.0},{"d":"2026-03-03","v":40.7},{"d":"2026-03-04","v":48.1},{"d":"2026-03-05","v":28.4},{"d":"2026-03-06","v":31.1},{"d":"2026-03-07","v":32.5},{"d":"2026-03-08","v":29.2},{"d":"2026-03-09","v":39.3},{"d":"2026-03-10","v":49.4},{"d":"2026-03-11","v":37.4},{"d":"2026-03-12","v":44.7},{"d":"2026-03-13","v":35.9},{"d":"2026-03-14","v":52.4},{"d":"2026-03-15","v":36.2},{"d":"2026-03-16","v":39.3},{"d":"2026-03-17","v":41.1},{"d":"2026-03-18","v":38.4},{"d":"2026-03-19","v":44.1},{"d":"2026-03-20","v":46.8},{"d":"2026-03-21","v":24.8},{"d":"2026-03-23","v":51.3},{"d":"2026-03-24","v":47.7},{"d":"2026-03-25","v":54.7},{"d":"2026-03-26","v":55.1},{"d":"2026-03-27","v":51.9},{"d":"2026-03-28","v":69.2},{"d":"2026-03-29","v":40.5},{"d":"2026-03-30","v":42.0},{"d":"2026-03-31","v":39.4}],"flight_health":[{"date":"2023-03-12","route":"BBI\u2192IXD","hrv":30.9,"hrv_prev":34.4,"hrv_next":43.6,"rhr":75.0,"sleep_before":null,"dep_hour":9,"delay":-29},{"date":"2023-04-29","route":"IXD\u2192BBI","hrv":17.8,"hrv_prev":null,"hrv_next":30.5,"rhr":65.0,"sleep_before":null,"dep_hour":12,"delay":-32},{"date":"2023-05-12","route":"BBI\u2192IXD","hrv":24.7,"hrv_prev":null,"hrv_next":22.1,"rhr":63.0,"sleep_before":null,"dep_hour":9,"delay":3},{"date":"2023-07-04","route":"BBI\u2192SIN","hrv":null,"hrv_prev":35.9,"hrv_next":37.6,"rhr":null,"sleep_before":2.0,"dep_hour":6,"delay":-15},{"date":"2023-07-08","route":"SIN\u2192BBI","hrv":55.0,"hrv_prev":41.6,"hrv_next":40.0,"rhr":56.0,"sleep_before":null,"dep_hour":14,"delay":-8},{"date":"2023-07-09","route":"BBI\u2192IXD","hrv":40.0,"hrv_prev":55.0,"hrv_next":74.4,"rhr":62.0,"sleep_before":null,"dep_hour":9,"delay":-33},{"date":"2023-07-29","route":"IXD\u2192BOM","hrv":61.4,"hrv_prev":44.3,"hrv_next":45.7,"rhr":58.0,"sleep_before":null,"dep_hour":14,"delay":16},{"date":"2023-08-04","route":"BOM\u2192BLR","hrv":46.6,"hrv_prev":29.9,"hrv_next":31.2,"rhr":61.0,"sleep_before":null,"dep_hour":23,"delay":null},{"date":"2023-10-15","route":"IXD\u2192BLR","hrv":57.5,"hrv_prev":48.1,"hrv_next":41.6,"rhr":69.0,"sleep_before":4.7,"dep_hour":15,"delay":-8},{"date":"2023-10-22","route":"BLR\u2192BOM","hrv":29.5,"hrv_prev":36.5,"hrv_next":95.9,"rhr":75.0,"sleep_before":null,"dep_hour":7,"delay":-8},{"date":"2023-10-22","route":"BOM\u2192IXD","hrv":29.5,"hrv_prev":36.5,"hrv_next":95.9,"rhr":75.0,"sleep_before":null,"dep_hour":11,"delay":-13},{"date":"2023-11-04","route":"VNS\u2192CCU","hrv":34.3,"hrv_prev":44.5,"hrv_next":24.6,"rhr":61.0,"sleep_before":6.7,"dep_hour":16,"delay":-12},{"date":"2023-12-22","route":"IXD\u2192LKO","hrv":44.8,"hrv_prev":58.8,"hrv_next":46.4,"rhr":65.0,"sleep_before":3.0,"dep_hour":16,"delay":0},{"date":"2023-12-22","route":"LKO\u2192BLR","hrv":44.8,"hrv_prev":58.8,"hrv_next":46.4,"rhr":65.0,"sleep_before":3.0,"dep_hour":19,"delay":-6},{"date":"2024-01-07","route":"BLR\u2192LKO","hrv":46.9,"hrv_prev":41.2,"hrv_next":45.3,"rhr":62.0,"sleep_before":1.1,"dep_hour":6,"delay":null},{"date":"2024-01-25","route":"IXD\u2192BOM","hrv":33.3,"hrv_prev":null,"hrv_next":24.4,"rhr":63.0,"sleep_before":null,"dep_hour":13,"delay":38},{"date":"2024-02-03","route":"BOM\u2192BLR","hrv":33.2,"hrv_prev":25.5,"hrv_next":41.7,"rhr":87.0,"sleep_before":null,"dep_hour":5,"delay":-10},{"date":"2024-02-12","route":"BLR\u2192IXD","hrv":53.7,"hrv_prev":41.8,"hrv_next":86.3,"rhr":62.0,"sleep_before":null,"dep_hour":8,"delay":-20},{"date":"2024-04-19","route":"BLR\u2192GOI","hrv":35.9,"hrv_prev":null,"hrv_next":null,"rhr":72.0,"sleep_before":null,"dep_hour":12,"delay":-18},{"date":"2025-04-24","route":"BLR\u2192HYD","hrv":28.5,"hrv_prev":73.8,"hrv_next":37.0,"rhr":66.0,"sleep_before":null,"dep_hour":22,"delay":3},{"date":"2025-05-14","route":"BLR\u2192BBI","hrv":null,"hrv_prev":51.2,"hrv_next":null,"rhr":null,"sleep_before":1.4,"dep_hour":7,"delay":-19},{"date":"2025-06-08","route":"BLR\u2192IXD","hrv":76.9,"hrv_prev":35.5,"hrv_next":null,"rhr":57.0,"sleep_before":1.3,"dep_hour":8,"delay":-20},{"date":"2025-06-16","route":"IXD\u2192BLR","hrv":32.7,"hrv_prev":21.3,"hrv_next":null,"rhr":65.0,"sleep_before":1.2,"dep_hour":11,"delay":-24},{"date":"2025-06-19","route":"BLR\u2192BBI","hrv":48.1,"hrv_prev":null,"hrv_next":47.4,"rhr":54.0,"sleep_before":null,"dep_hour":7,"delay":-18},{"date":"2025-06-21","route":"BBI\u2192BLR","hrv":37.3,"hrv_prev":47.4,"hrv_next":35.5,"rhr":62.0,"sleep_before":null,"dep_hour":21,"delay":15},{"date":"2025-08-07","route":"BLR\u2192DEL","hrv":66.4,"hrv_prev":43.3,"hrv_next":45.9,"rhr":54.0,"sleep_before":null,"dep_hour":21,"delay":-11},{"date":"2025-08-11","route":"DEL\u2192BLR","hrv":71.6,"hrv_prev":43.0,"hrv_next":48.2,"rhr":54.0,"sleep_before":null,"dep_hour":5,"delay":-23},{"date":"2025-09-21","route":"BLR\u2192IXD","hrv":42.5,"hrv_prev":null,"hrv_next":null,"rhr":58.0,"sleep_before":null,"dep_hour":8,"delay":0},{"date":"2025-09-23","route":"LKO\u2192JRG","hrv":null,"hrv_prev":null,"hrv_next":47.9,"rhr":null,"sleep_before":3.0,"dep_hour":17,"delay":null},{"date":"2025-09-28","route":"IXD\u2192BLR","hrv":40.3,"hrv_prev":64.1,"hrv_next":30.1,"rhr":58.0,"sleep_before":null,"dep_hour":11,"delay":-26},{"date":"2025-10-17","route":"BLR\u2192IXD","hrv":38.0,"hrv_prev":null,"hrv_next":null,"rhr":64.0,"sleep_before":null,"dep_hour":8,"delay":-6},{"date":"2025-10-22","route":"IXD\u2192BLR","hrv":17.5,"hrv_prev":null,"hrv_next":32.5,"rhr":null,"sleep_before":null,"dep_hour":11,"delay":-6},{"date":"2025-11-12","route":"BBI\u2192BLR","hrv":49.9,"hrv_prev":42.3,"hrv_next":65.8,"rhr":57.0,"sleep_before":null,"dep_hour":10,"delay":24},{"date":"2025-11-16","route":"BLR\u2192BBI","hrv":50.8,"hrv_prev":22.0,"hrv_next":50.5,"rhr":61.0,"sleep_before":7.7,"dep_hour":21,"delay":-8},{"date":"2025-12-04","route":"BBI\u2192BLR","hrv":42.1,"hrv_prev":37.9,"hrv_next":39.1,"rhr":null,"sleep_before":null,"dep_hour":10,"delay":958},{"date":"2025-12-08","route":"BLR\u2192BBI","hrv":46.8,"hrv_prev":null,"hrv_next":31.5,"rhr":58.0,"sleep_before":1.4,"dep_hour":11,"delay":-12},{"date":"2026-01-04","route":"BLR\u2192BBI","hrv":32.4,"hrv_prev":null,"hrv_next":53.2,"rhr":76.0,"sleep_before":4.8,"dep_hour":18,"delay":35},{"date":"2026-01-16","route":"BBI\u2192BLR","hrv":55.2,"hrv_prev":29.0,"hrv_next":43.2,"rhr":66.0,"sleep_before":null,"dep_hour":22,"delay":-18},{"date":"2026-01-19","route":"BLR\u2192BBI","hrv":39.3,"hrv_prev":28.0,"hrv_next":46.5,"rhr":65.0,"sleep_before":4.4,"dep_hour":7,"delay":-7},{"date":"2026-01-24","route":"BBI\u2192IXR","hrv":52.3,"hrv_prev":107.4,"hrv_next":39.2,"rhr":62.0,"sleep_before":5.6,"dep_hour":18,"delay":10},{"date":"2026-01-26","route":"IXR\u2192BBI","hrv":38.7,"hrv_prev":39.2,"hrv_next":43.2,"rhr":76.0,"sleep_before":5.9,"dep_hour":20,"delay":-3},{"date":"2026-01-31","route":"BBI\u2192DEL","hrv":63.3,"hrv_prev":56.2,"hrv_next":50.2,"rhr":64.0,"sleep_before":null,"dep_hour":0,"delay":-2},{"date":"2026-02-03","route":"DEL\u2192BBI","hrv":43.0,"hrv_prev":50.1,"hrv_next":48.9,"rhr":70.0,"sleep_before":5.4,"dep_hour":5,"delay":12},{"date":"2026-02-14","route":"BBI\u2192BLR","hrv":40.7,"hrv_prev":50.7,"hrv_next":48.6,"rhr":83.0,"sleep_before":4.7,"dep_hour":5,"delay":-21},{"date":"2026-02-20","route":"BBI\u2192DXB","hrv":28.0,"hrv_prev":62.6,"hrv_next":29.0,"rhr":76.0,"sleep_before":null,"dep_hour":18,"delay":-27},{"date":"2026-02-24","route":"DXB\u2192HYD","hrv":36.0,"hrv_prev":46.1,"hrv_next":42.9,"rhr":56.0,"sleep_before":4.8,"dep_hour":22,"delay":-2},{"date":"2026-02-25","route":"HYD\u2192BBI","hrv":42.9,"hrv_prev":36.0,"hrv_next":47.8,"rhr":61.0,"sleep_before":null,"dep_hour":7,"delay":4},{"date":"2026-03-27","route":"BBI\u2192DEL","hrv":51.9,"hrv_prev":55.1,"hrv_next":69.2,"rhr":63.0,"sleep_before":3.9,"dep_hour":6,"delay":-50},{"date":"2026-03-29","route":"IXC\u2192PAT","hrv":40.5,"hrv_prev":69.2,"hrv_next":42.0,"rhr":68.0,"sleep_before":1.7,"dep_hour":7,"delay":-35},{"date":"2026-03-29","route":"PAT\u2192BBI","hrv":40.5,"hrv_prev":69.2,"hrv_next":42.0,"rhr":68.0,"sleep_before":1.7,"dep_hour":9,"delay":-24}],"summary":{"hrv_rest":43.6,"hrv_fly":43.2,"hrv_fly_n":44,"hrv_rest_n":486,"rhr_rest":62.4,"rhr_fly":64.5,"sleep_normal":5.5,"sleep_before_early":3.1,"sleep_early_n":8}}};
+const F=D.flights,AP=D.airports;
+const HLT=D.health||{},HS=HLT.summary||{};
+const $=id=>document.getElementById(id);
+const tip=$('tip');
+const C={blue:'#2D6AE0',purple:'#7B5AFF',green:'#4A8F6D',red:'#C2532D',orange:'#D4850A',cyan:'#0891B2',pink:'#DB2777',navy:'#1B2838',t3:'#8B9AAF',t4:'#B8C4D4',border:'#E6DFD3',bg:'#FBF8F3',terra:'#C2532D',sage:'#4A8F6D',amber:'#D4850A',pal:['#2D6AE0','#C2532D','#4A8F6D','#D4850A','#0891B2','#7B5AFF','#DB2777','#64748B','#6366F1','#10B981']};
+function fmt(n){return n.toLocaleString('en-IN')}
+function fmtD(d){if(!d)return'';var p=d.split('-');var m=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];return parseInt(p[2])+' '+m[parseInt(p[1])-1]+' '+p[0]}
+function mkS(w,h){const s=document.createElementNS('http://www.w3.org/2000/svg','svg');s.setAttribute('viewBox','0 0 '+w+' '+h);s.setAttribute('width','100%');s.style.display='block';return s}
+function el(t,a,x){const e=document.createElementNS('http://www.w3.org/2000/svg',t);for(const[k,v] of Object.entries(a||{}))e.setAttribute(k,v);if(x)e.textContent=x;return e}
+function sT(e,h){tip.innerHTML=h;tip.style.display='block';tip.style.left=Math.min(e.clientX+12,innerWidth-250)+'px';tip.style.top=(e.clientY-10)+'px'}
+function hT(){tip.style.display='none'}
+
+// ═══ YEARLY ═══
+(function(){
+const yrs={};F.forEach(f=>{if(!yrs[f.year])yrs[f.year]={c:0,d:0};yrs[f.year].c++;yrs[f.year].d+=f.distance_km});
+const all=[];for(let y=2015;y<=2026;y++)all.push(y);
+const mx=Math.max(...all.map(y=>(yrs[y]||{c:0}).c));
+const W=700,H=200,ml=35,mr=50,mt=12,mb=24,cw=W-ml-mr,ch=H-mt-mb,gap=cw/all.length,bw=gap*.55;
+const s=mkS(W,H);
+// grid
+[10,20,30].forEach(v=>{if(v>mx)return;const y=mt+ch-(v/mx)*ch;s.appendChild(el('line',{x1:ml,y1:y,x2:W-mr,y2:y,stroke:'#ECEAE4','stroke-width':.5}));s.appendChild(el('text',{x:ml-6,y:y+3,fill:C.t3,'font-size':7,'text-anchor':'end'},v))});
+// cumulative line
+let cum=0;const td=F.reduce((a,f)=>a+f.distance_km,0);const pts=[];
+all.forEach((y,i)=>{cum+=(yrs[y]||{d:0}).d;pts.push({x:ml+i*gap+gap/2,y:mt+ch-(cum/td)*ch})});
+s.appendChild(el('path',{d:pts.map((p,i)=>(i?'L':'M')+p.x+','+p.y).join(' '),fill:'none',stroke:C.purple,'stroke-width':2,opacity:.4,'stroke-linecap':'round'}));
+s.appendChild(el('text',{x:W-4,y:mt+4,fill:C.purple,'font-size':6.5,'text-anchor':'end',opacity:.6},fmt(td)+' km cumulative'));
+// bars
+all.forEach((y,i)=>{
+  const c=(yrs[y]||{c:0}).c,bh=c>0?(c/mx)*ch:0,x=ml+i*gap+(gap-bw)/2;
+  if(c>0){
+    const r=el('rect',{x:x,y:mt+ch-bh,width:bw,height:bh,fill:C.blue,rx:4,opacity:.85});
+    r.addEventListener('mousemove',e=>sT(e,'<b>'+y+'</b><br>'+c+' flights<br>'+fmt((yrs[y]||{d:0}).d)+' km'));
+    r.addEventListener('mouseleave',hT);s.appendChild(r);
+    s.appendChild(el('text',{x:x+bw/2,y:mt+ch-bh-5,fill:C.navy,'font-size':10,'text-anchor':'middle','font-weight':700},c));
+  }
+  s.appendChild(el('text',{x:x+bw/2,y:H-6,fill:C.t3,'font-size':8,'text-anchor':'middle','font-weight':500},String(y)));
+});
+$('c-year').appendChild(s);
+})();
+
+// ═══ HEATMAP ═══
+(function(){
+const grid={};F.forEach(f=>{const k=f.year+'-'+f.month;grid[k]=(grid[k]||0)+1});
+const mx=Math.max(...Object.values(grid));
+const years=[...new Set(F.map(f=>f.year))].sort();
+const mL='JFMAMJJASOND'.split('');
+const cs=24,ml=30,mt=18,g=3;
+const W=ml+12*(cs+g)+5,H=mt+years.length*(cs+g)+5;
+const s=mkS(W,H);
+mL.forEach((m,i)=>s.appendChild(el('text',{x:ml+i*(cs+g)+cs/2,y:11,fill:C.t3,'font-size':7,'text-anchor':'middle','font-weight':500},m)));
+years.forEach((y,yi)=>{
+  s.appendChild(el('text',{x:ml-5,y:mt+yi*(cs+g)+cs/2+3,fill:C.t3,'font-size':7,'text-anchor':'end','font-weight':500},String(y)));
+  for(let m=1;m<=12;m++){
+    const v=grid[y+'-'+m]||0;
+    const a=v===0?0:.2+(v/mx)*.8;
+    const fill=v===0?'#ECEAE4':'rgba(37,99,235,'+a+')';
+    const tc=a>.5?'#fff':a>0?C.blue:'transparent';
+    const r=el('rect',{x:ml+(m-1)*(cs+g),y:mt+yi*(cs+g),width:cs,height:cs,fill:fill,rx:5});
+    r.addEventListener('mousemove',e=>sT(e,mL[m-1]+' '+y+': <b>'+v+'</b> flight'+(v!==1?'s':'')));
+    r.addEventListener('mouseleave',hT);s.appendChild(r);
+    if(v>0)s.appendChild(el('text',{x:ml+(m-1)*(cs+g)+cs/2,y:mt+yi*(cs+g)+cs/2+3.5,fill:tc,'font-size':8.5,'text-anchor':'middle','font-weight':600},v));
+  }
+});
+$('c-heat').appendChild(s);
+})();
+
+// ═══ CLOCK ═══
+(function(){
+const hours=Array(24).fill(0);F.forEach(f=>{if(f.dep_hour!==null)hours[f.dep_hour]++});
+const mx=Math.max(...hours),total=hours.reduce((a,b)=>a+b,0);
+const W=300,H=310,cx=150,cy=148,R=115,r=50;
+const s=mkS(W,H);
+s.appendChild(el('circle',{cx:cx,cy:cy,r:R+6,fill:'none',stroke:'#ECEAE4','stroke-width':.5}));
+s.appendChild(el('circle',{cx:cx,cy:cy,r:r,fill:'#FAFAF8',stroke:'#ECEAE4','stroke-width':.5}));
+// day band
+const d1=(6/24)*Math.PI*2-Math.PI/2,d2=(18/24)*Math.PI*2-Math.PI/2;
+s.appendChild(el('path',{d:'M'+(cx+r*Math.cos(d1))+','+(cy+r*Math.sin(d1))+' A'+r+','+r+' 0 1 1 '+(cx+r*Math.cos(d2))+','+(cy+r*Math.sin(d2))+' L'+(cx+(R+2)*Math.cos(d2))+','+(cy+(R+2)*Math.sin(d2))+' A'+(R+2)+','+(R+2)+' 0 1 0 '+(cx+(R+2)*Math.cos(d1))+','+(cy+(R+2)*Math.sin(d1))+' Z',fill:'rgba(37,99,235,.03)'}));
+for(let h=0;h<24;h++){
+  const a1=(h/24)*Math.PI*2-Math.PI/2,a2=((h+1)/24)*Math.PI*2-Math.PI/2;
+  if(hours[h]===0)continue;
+  const intensity=hours[h]/mx;
+  const oR=r+(R-r)*intensity;
+  const day=h>=6&&h<18,col=day?C.blue:C.purple;
+  const p=el('path',{d:'M'+(cx+r*Math.cos(a1))+','+(cy+r*Math.sin(a1))+' L'+(cx+oR*Math.cos(a1))+','+(cy+oR*Math.sin(a1))+' A'+oR+','+oR+' 0 0 1 '+(cx+oR*Math.cos(a2))+','+(cy+oR*Math.sin(a2))+' L'+(cx+r*Math.cos(a2))+','+(cy+r*Math.sin(a2))+' A'+r+','+r+' 0 0 0 '+(cx+r*Math.cos(a1))+','+(cy+r*Math.sin(a1))+' Z',fill:col,opacity:.2+intensity*.65});
+  p.addEventListener('mousemove',e=>sT(e,'<b>'+String(h).padStart(2,'0')+':00–'+String(h+1).padStart(2,'0')+':00</b><br>'+hours[h]+' flights ('+(hours[h]/total*100).toFixed(0)+'%)'));
+  p.addEventListener('mouseleave',hT);s.appendChild(p);
+  if(hours[h]>=5){const ma=(a1+a2)/2,lr=oR+9;s.appendChild(el('text',{x:cx+lr*Math.cos(ma),y:cy+lr*Math.sin(ma)+3,fill:col,'font-size':7,'text-anchor':'middle','font-weight':700},hours[h]))}
+}
+for(let h=0;h<24;h++){
+  const a=(h/24)*Math.PI*2-Math.PI/2,lr=R+16,key=h%3===0;
+  s.appendChild(el('text',{x:cx+lr*Math.cos(a),y:cy+lr*Math.sin(a)+3,fill:key?C.navy:C.t4,'font-size':key?8:6,'text-anchor':'middle','font-weight':key?700:400},String(h).padStart(2,'0')));
+  const t1=R+2,t2=R+(key?6:4);
+  s.appendChild(el('line',{x1:cx+t1*Math.cos(a),y1:cy+t1*Math.sin(a),x2:cx+t2*Math.cos(a),y2:cy+t2*Math.sin(a),stroke:key?C.navy:'#D5D3CC','stroke-width':key?1.2:.4}));
+}
+s.appendChild(el('text',{x:cx,y:cy-4,fill:C.navy,'font-size':14,'text-anchor':'middle','font-weight':800},'24h'));
+s.appendChild(el('text',{x:cx,y:cy+10,fill:C.t3,'font-size':6.5,'text-anchor':'middle','letter-spacing':'.12em','font-weight':600},'CLOCK'));
+// legend
+s.appendChild(el('circle',{cx:cx-50,cy:H-10,r:4,fill:C.blue,opacity:.7}));
+s.appendChild(el('text',{x:cx-42,y:H-7,fill:C.t3,'font-size':7},'Day'));
+s.appendChild(el('circle',{cx:cx+10,cy:H-10,r:4,fill:C.purple,opacity:.7}));
+s.appendChild(el('text',{x:cx+18,y:H-7,fill:C.t3,'font-size':7},'Night'));
+$('c-clock').appendChild(s);
+})();
+
+// ═══ SVG H-BAR helper ═══
+function hBar(container,data,opts){
+  const o=Object.assign({W:340,ml:45,mr:35,rh:22,gap:4,color:C.blue},opts||{});
+  const bw=o.W-o.ml-o.mr,H=data.length*(o.rh+o.gap)+8;
+  const mx=Math.max(...data.map(d=>d.val));
+  const s=mkS(o.W,H);
+  data.forEach((d,i)=>{
+    const y=4+i*(o.rh+o.gap),w=(d.val/mx)*bw;
+    const col=d.color||o.color;
+    s.appendChild(el('text',{x:o.ml-6,y:y+o.rh/2+4,fill:C.navy,'font-size':d.labelSize||9,'text-anchor':'end','font-weight':600},d.label));
+    s.appendChild(el('rect',{x:o.ml,y:y,width:bw,height:o.rh,fill:'#ECEAE4',rx:5}));
+    const bar=el('rect',{x:o.ml,y:y,width:Math.max(w,3),height:o.rh,fill:col,rx:5,opacity:.85});
+    if(d.tip){bar.addEventListener('mousemove',e=>sT(e,d.tip));bar.addEventListener('mouseleave',hT)}
+    s.appendChild(bar);
+    s.appendChild(el('text',{x:o.ml+bw+6,y:y+o.rh/2+4,fill:C.navy,'font-size':9.5,'font-weight':700},String(d.val)));
+  });
+  $(container).appendChild(s);
+}
+
+// ═══ AIRPORTS ═══
+(function(){
+  const c={};F.forEach(f=>{c[f.from]=(c[f.from]||0)+1;c[f.to]=(c[f.to]||0)+1});
+  const sorted=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  hBar('c-airports',sorted.map(([code,n])=>{
+    const city=AP[code]?AP[code].city:'';
+    const intl=AP[code]&&AP[code].country!=='IN';
+    return{label:code,val:n,color:intl?C.cyan:C.blue,tip:'<b>'+code+'</b> · '+city+'<br>'+n+' touchpoints'}
+  }));
+})();
+
+// ═══ ROUTES ═══
+(function(){
+  const c={};F.forEach(f=>{const k=[f.from,f.to].sort().join(' ↔ ');c[k]=(c[k]||0)+1});
+  const sorted=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  hBar('c-routes',sorted.map(([r,n],i)=>({label:r,val:n,color:C.pal[i%C.pal.length],tip:'<b>'+r+'</b><br>'+n+' flights',labelSize:7.5})),{ml:65});
+})();
+
+// ═══ INTL (compressed) ═══
+(function(){
+  var intl=F.filter(function(f){return f.is_intl}).sort(function(a,b){return a.date.localeCompare(b.date)});
+  var tn={'DPS':'\u{1F393} Bachelor trip','MLE':'\u{1F48D} Honeymoon','DXB':'Dubai','SIN':'Singapore','KUL':'KL stopover'};
+  var countries=new Set();intl.forEach(function(f){if(AP[f.to]&&AP[f.to].country!=='IN')countries.add(AP[f.to].country);if(AP[f.from]&&AP[f.from].country!=='IN')countries.add(AP[f.from].country)});
+  var h='<div style="display:flex;flex-wrap:wrap;gap:.5rem">';
+  intl.forEach(function(f){
+    var note=tn[f.to]||tn[f.from]||'';
+    h+='<div style="background:var(--bg);border:1px solid var(--bdr);border-radius:8px;padding:.5rem .7rem;font-size:.68rem">';
+    h+='<span style="font-weight:600;color:var(--ink)">'+f.from+' \u2192 '+f.to+'</span>';
+    h+=' <span style="color:var(--t3)">'+fmtD(f.date)+'</span>';
+    if(note)h+=' <span style="font-size:.6rem">'+note+'</span>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div style="font-size:.6rem;color:var(--t3);margin-top:.5rem">'+intl.length+' international flights \u00b7 '+countries.size+' countries</div>';
+  $('c-intl').innerHTML=h;
+})();
+
+// ═══ AIRLINES ═══
+(function(){
+  const a={};F.forEach(f=>{
+    if(!a[f.airline_name])a[f.airline_name]={n:0,d:0,del:[]};
+    a[f.airline_name].n++;a[f.airline_name].d+=f.distance_km;
+    if(f.arr_delay_min!==null)a[f.airline_name].del.push(f.arr_delay_min);
+  });
+  const sorted=Object.entries(a).sort((a,b)=>b[1].n-a[1].n);
+  let h='<table class="tbl"><tr><th>Airline</th><th>Flights</th><th>Distance</th><th>Avg Delay</th><th>On-Time</th></tr>';
+  sorted.forEach(([name,d],i)=>{
+    const avg=d.del.length?(d.del.reduce((s,x)=>s+x,0)/d.del.length).toFixed(0):'–';
+    const otp=d.del.length?((d.del.filter(x=>x<=15).length/d.del.length)*100).toFixed(0)+'%':'–';
+    const dc=avg!=='–'&&parseInt(avg)>15?C.red:C.green;
+    h+='<tr><td><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+C.pal[i%C.pal.length]+';margin-right:6px"></span><b class="hl">'+name+'</b></td><td><b>'+d.n+'</b></td><td>'+fmt(d.d)+' km</td><td style="color:'+dc+';font-weight:600">'+avg+'m</td><td style="font-weight:600">'+otp+'</td></tr>';
+  });
+  h+='</table>';
+  $('c-airlines').innerHTML=h;
+})();
+
+// ═══ AIRCRAFT ═══
+(function(){
+  const c={};F.forEach(f=>{if(f.aircraft)c[f.aircraft]=(c[f.aircraft]||0)+1});
+  // Manufacturer donut + type bars side by side
+  const mfr={};F.forEach(f=>{if(!f.aircraft)return;const m=f.aircraft.startsWith('Airbus')?'Airbus':f.aircraft.startsWith('Boeing')?'Boeing':f.aircraft.includes('ATR')?'ATR':'Other';mfr[m]=(mfr[m]||0)+1});
+  const mSorted=Object.entries(mfr).sort((a,b)=>b[1]-a[1]);
+  const total=mSorted.reduce((s,[,v])=>s+v,0);
+  const mC={Airbus:C.blue,Boeing:C.orange,ATR:C.green,Other:C.t3};
+
+  const W=320,H=180,cx=90,cy=90,R=70,r=42;
+  const s=mkS(W,H);
+  let angle=-Math.PI/2;
+  mSorted.forEach(([name,count])=>{
+    const pct=count/total,a1=angle,a2=angle+pct*Math.PI*2,la=pct>.5?1:0;
+    const p=el('path',{d:'M'+(cx+R*Math.cos(a1))+','+(cy+R*Math.sin(a1))+' A'+R+','+R+' 0 '+la+' 1 '+(cx+R*Math.cos(a2))+','+(cy+R*Math.sin(a2))+' L'+(cx+r*Math.cos(a2))+','+(cy+r*Math.sin(a2))+' A'+r+','+r+' 0 '+la+' 0 '+(cx+r*Math.cos(a1))+','+(cy+r*Math.sin(a1))+' Z',fill:mC[name]||C.t3,opacity:.85});
+    p.addEventListener('mousemove',e=>sT(e,'<b>'+name+'</b><br>'+count+' flights ('+(pct*100).toFixed(0)+'%)'));
+    p.addEventListener('mouseleave',hT);s.appendChild(p);angle=a2;
+  });
+  s.appendChild(el('circle',{cx:cx,cy:cy,r:r-1,fill:'#fff'}));
+  s.appendChild(el('text',{x:cx,y:cy-2,fill:C.navy,'font-size':16,'text-anchor':'middle','font-weight':800},total));
+  s.appendChild(el('text',{x:cx,y:cy+10,fill:C.t3,'font-size':6,'text-anchor':'middle','letter-spacing':'.12em','font-weight':600},'FLIGHTS'));
+  mSorted.forEach(([name,count],i)=>{
+    s.appendChild(el('rect',{x:195,y:30+i*30,width:10,height:10,fill:mC[name],rx:3}));
+    s.appendChild(el('text',{x:210,y:38+i*30,fill:C.navy,'font-size':10,'font-weight':700},name));
+    s.appendChild(el('text',{x:210,y:49+i*30,fill:C.t3,'font-size':8},count+' · '+(count/total*100).toFixed(0)+'%'));
+  });
+  $('c-aircraft').appendChild(s);
+})();
+
+// ═══ FLIGHT × BODY (sleep only) ═══
+(function(){
+  if(!HS.sleep_before_early) return;
+  var container=$('c-body');
+  var normalH=HS.sleep_normal,earlyH=HS.sleep_before_early;
+  var d=document.createElement('div');d.className='box';
+  d.style.cssText='max-width:500px';
+  d.innerHTML='<div class="box-t">Sleep Before Early Flights (&lt;8am dep)</div>'+
+    '<div style="display:flex;align-items:flex-end;gap:1.5rem;padding:.8rem 0;justify-content:center">'+
+    '<div style="text-align:center"><div style="width:80px;height:'+Math.round(normalH/8*110)+'px;background:#4A8F6D;border-radius:10px 10px 4px 4px;opacity:.8"></div><div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:#4A8F6D;margin-top:.4rem">'+normalH+'h</div><div style="font-size:.62rem;color:#8B9AAF">Normal night</div></div>'+
+    '<div style="text-align:center;padding-bottom:'+Math.round(earlyH/8*110/2)+'px"><div style="font-family:var(--mono);font-size:1.5rem;font-weight:800;color:#C2532D">−2.4h</div><div style="font-size:.58rem;color:#8B9AAF">deficit</div></div>'+
+    '<div style="text-align:center"><div style="width:80px;height:'+Math.round(earlyH/8*110)+'px;background:#C2532D;border-radius:10px 10px 4px 4px;opacity:.8"></div><div style="font-family:var(--mono);font-size:1.3rem;font-weight:700;color:#C2532D;margin-top:.4rem">'+earlyH+'h</div><div style="font-size:.62rem;color:#8B9AAF">Before early flight</div></div>'+
+    '</div>'+
+    '<div style="font-size:.58rem;color:#B8C4D4;margin-top:.3rem">Based on '+HS.sleep_early_n+' early flights with Apple Watch sleep data</div>';
+  container.appendChild(d);
+})();
+
+// ═══ DELAY CARDS ═══
+(function(){
+  const dl=F.filter(f=>f.arr_delay_min!==null).map(f=>f.arr_delay_min);
+  const early=dl.filter(d=>d<-5).length,ontime=dl.filter(d=>d>=-5&&d<=15).length;
+  const lost=dl.filter(d=>d>0).reduce((s,d)=>s+d,0),avg=dl.reduce((s,d)=>s+d,0)/dl.length;
+  [{l:'On-Time Rate',v:((ontime+early)/dl.length*100).toFixed(0)+'%',s:(ontime+early)+' of '+dl.length+' tracked',c:C.green},
+   {l:'Avg Delta',v:(avg>0?'+':'')+avg.toFixed(0)+' min',s:avg>0?'Slightly late avg':'Early on average',c:avg>0?C.red:C.green},
+   {l:'Time Lost to Delays',v:(lost/60).toFixed(1)+' hrs',s:fmt(lost)+' min total',c:C.red},
+   {l:'Arrived Early',v:early,s:(early/dl.length*100).toFixed(0)+'% of flights',c:C.green}
+  ].forEach(c=>{
+    const d=document.createElement('div');d.className='rec';
+    d.innerHTML='<div class="rec-l">'+c.l+'</div><div style="font-family:var(--mono);font-size:1.5rem;font-weight:700;color:'+c.c+'">'+c.v+'</div><div class="rec-s">'+c.s+'</div>';
+    $('c-delay-cards').appendChild(d);
+  });
+})();
+
+// ═══ DISTANCE MILESTONES ═══
+(function(){
+  var totalDist=F.reduce(function(a,f){return a+f.distance_km},0);
+  var milestones=[
+    {km:7517,label:'Indian coastline',emoji:'\u{1F3D6}'},
+    {km:40075,label:'1\u00d7 around Earth',emoji:'\u{1F30D}'},
+    {km:68000,label:'Indian rail network',emoji:'\u{1F683}'},
+    {km:80150,label:'2\u00d7 around Earth',emoji:'\u{1F30D}'},
+    {km:120225,label:'3\u00d7 around Earth',emoji:'\u{1F30D}'},
+    {km:145000,label:'India NH network',emoji:'\u{1F6E3}'},
+    
+    {km:160300,label:'4\u00d7 around Earth',emoji:'\u{1F30D}'},
+    {km:384400,label:'The Moon',emoji:'\u{1F319}'}
+  ];
+  var container=$('c-miles');
+  var h='<div style="display:flex;gap:1.5rem;align-items:flex-start">';
+  // Left: vertical checklist
+  h+='<div style="flex:1">';
+  milestones.forEach(function(m){
+    var done=totalDist>=m.km;
+    var pct=done?100:Math.min(Math.round(totalDist/m.km*100),99);
+    var col=done?C.sage:C.t4;
+    var check=done?'\u2713':'';
+    h+='<div style="display:flex;align-items:center;gap:.6rem;padding:.4rem 0;border-bottom:1px solid #F0EBE3">';
+    h+='<div style="width:20px;height:20px;border-radius:50%;background:'+(done?C.sage+'20':'#F0EBE3')+';display:flex;align-items:center;justify-content:center;font-size:10px;color:'+col+';font-weight:700;flex-shrink:0">'+check+'</div>';
+    h+='<div style="flex:1"><span style="font-size:.75rem;font-weight:'+(done?'600':'400')+';color:'+(done?C.navy:C.t4)+'">'+m.label+'</span>';
+    h+=' <span style="font-family:var(--mono);font-size:.6rem;color:'+C.t3+'">'+fmt(m.km)+' km</span></div>';
+    if(!done){h+='<span style="font-family:var(--mono);font-size:.62rem;color:'+C.terra+';font-weight:600">'+pct+'%</span>'}
+    h+='</div>';
+  });
+  h+='</div>';
+  // Right: progress to moon visual
+  h+='<div style="width:180px;text-align:center;padding-top:.5rem;flex-shrink:0">';
+  var moonPct=Math.round(totalDist/384400*100);
+  h+='<div style="position:relative;width:120px;height:120px;margin:0 auto">';
+  // SVG circle progress
+  h+='<svg viewBox="0 0 120 120" width="120" height="120"><circle cx="60" cy="60" r="52" fill="none" stroke="#ECEAE4" stroke-width="8"/>';
+  var circumference=2*Math.PI*52;
+  var dashoffset=circumference-(moonPct/100)*circumference;
+  h+='<circle cx="60" cy="60" r="52" fill="none" stroke="'+C.blue+'" stroke-width="8" stroke-linecap="round" stroke-dasharray="'+circumference+'" stroke-dashoffset="'+dashoffset+'" transform="rotate(-90 60 60)" opacity=".85"/>';
+  h+='<text x="60" y="55" text-anchor="middle" font-size="22" font-weight="800" fill="'+C.navy+'" font-family="IBM Plex Mono,monospace">'+moonPct+'%</text>';
+  h+='<text x="60" y="70" text-anchor="middle" font-size="8" fill="'+C.t3+'" font-family="IBM Plex Mono,monospace">to Moon</text></svg>';
+  h+='</div>';
+  h+='<div style="font-family:var(--mono);font-size:.62rem;color:'+C.t3+';margin-top:.5rem">'+fmt(384400-totalDist)+' km to go</div>';
+  h+='<div style="font-family:var(--mono);font-size:.55rem;color:'+C.t4+';margin-top:.15rem">\u2248'+Math.round((384400-totalDist)/1063)+' more BBI\u2194BLR flights</div>';
+  h+='</div></div>';
+  container.innerHTML=h;
+
+})();
+
+// ═══ AVGEEK RECORDS ═══
+(function(){
+  var longest=F.reduce(function(a,b){return b.distance_km>a.distance_km?b:a});
+  var shortest=F.reduce(function(a,b){return b.distance_km<a.distance_km?b:a});
+  var wD=F.filter(function(f){return f.arr_delay_min!==null});
+  var worst=wD.reduce(function(a,b){return b.arr_delay_min>a.arr_delay_min?b:a});
+  var best=wD.reduce(function(a,b){return b.arr_delay_min<a.arr_delay_min?b:a});
+  var items=[
+    {l:'Longest Flight',v:longest.from_city+' \u2192 '+longest.to_city,s:fmt(longest.distance_km)+' km \u00b7 '+(longest.duration_min?Math.floor(longest.duration_min/60)+'h '+longest.duration_min%60+'m':'')+'\u00b7 '+longest.aircraft+' \u00b7 '+fmtD(longest.date)},
+    {l:'Shortest Flight',v:shortest.from_city+' \u2192 '+shortest.to_city,s:fmt(shortest.distance_km)+' km \u00b7 '+(shortest.aircraft||'')+'\u00b7 '+fmtD(shortest.date)},
+    {l:'Worst Delay',v:(worst.arr_delay_min/60).toFixed(1)+' hours late',s:worst.from+'\u2192'+worst.to+' \u00b7 '+(worst.aircraft||'')+' \u00b7 '+fmtD(worst.date)},
+  ];
+  items.forEach(function(r){
+    var d=document.createElement('div');d.className='rec';
+    d.innerHTML='<div class="rec-l">'+r.l+'</div><div class="rec-v">'+r.v+'</div><div class="rec-s">'+r.s+'</div>';
+    $('c-av-records').appendChild(d);
+  });
+})();
+
+// ═══ INSIGHTS ═══
+(function(){
+  const sorted=[...F].sort((a,b)=>a.date.localeCompare(b.date));
+  const totalDist=F.reduce((s,f)=>s+f.distance_km,0);
+  const totalDur=F.filter(f=>f.duration_min).reduce((s,f)=>s+f.duration_min,0);
+  const igo=F.filter(f=>f.airline==='IGO').length;
+  const bbiBLR=F.filter(f=>(f.from==='BBI'&&f.to==='BLR')||(f.from==='BLR'&&f.to==='BBI')).length;
+  const post23=F.filter(f=>f.year>=2023).length;
+  const post23m=new Set(F.filter(f=>f.year>=2023).map(f=>f.date.slice(0,7))).size;
+  const daysInAir=(totalDur/60/24).toFixed(1);
+  const speeds=F.filter(f=>f.duration_min&&f.duration_min>0).map(f=>({speed:f.distance_km/(f.duration_min/60),...f})).sort((a,b)=>b.speed-a.speed);
+  const gaps=[];for(let i=1;i<sorted.length;i++){const d=(new Date(sorted[i].date)-new Date(sorted[i-1].date))/864e5;gaps.push({days:d,from:sorted[i-1].date,to:sorted[i].date})}
+  const covidGap=gaps.find(g=>g.from.startsWith('2020-03'));
+  const uniqueTails=new Set(F.filter(f=>f.tail).map(f=>f.tail)).size;
+
+  const items=[
+    {e:'\u2708\uFE0F',t:'72% IndiGo',b:igo+'/'+F.length+' flights. 2018\u20132022 was 100% IndiGo. Only diversified slightly from 2024.'},
+    {e:'\u{1F680}',t:'5.3\u00d7 Acceleration',b:'5.2 flights/yr (2015\u20132022) to 28/yr (2023+). Something changed in 2023.'},
+    {e:'\u{1F6E4}\uFE0F',t:'The BBI\u2194BLR Corridor',b:bbiBLR+' flights between Bhubaneswar and Bengaluru.'},
+    {e:'\u{1F393}',t:'Bachelor \u2192 Honeymoon in 24 Days',b:'Bali 14 Nov \u2192 Maldives 8 Dec. BLR\u2192DPS\u2192KUL\u2192BLR, then BLR\u2192MLE\u2192BLR.'},
+    {e:'\u26A1',t:'7.7\u00d7 Speed Gap',b:speeds[0].speed.toFixed(0)+' km/h ('+speeds[0].from_city+'\u2192'+speeds[0].to_city+', 737-800) vs '+speeds[speeds.length-1].speed.toFixed(0)+' km/h ('+speeds[speeds.length-1].from_city+'\u2192'+speeds[speeds.length-1].to_city+', ATR 72).'},
+    {e:'\u23F1\uFE0F',t:daysInAir+' Days Airborne',b:Math.round(totalDur/60)+' hours sitting in planes. '+Math.floor(totalDur/60/22)+' full seasons of TV.'},
+    {e:'\u{1F3B0}',t:'VT-IZK: 3 Times',b:'Out of '+uniqueTails+' unique aircraft, you\u0027ve been on this A320neo on 3 separate occasions.'},
+  ];
+  const container=$('c-insights');
+  items.forEach(it=>{
+    const d=document.createElement('div');d.className='insight';
+    d.innerHTML='<div class="insight-emoji">'+it.e+'</div><div><div class="insight-title">'+it.t+'</div><div class="insight-body">'+it.b+'</div></div>';
+    container.appendChild(d);
+  });
+})();
+
+// ═══ AVGEEK: SPEED RECORD ═══
+(function(){
+  var speeds=F.filter(function(f){return f.duration_min&&f.duration_min>0&&f.aircraft}).map(function(f){return{speed:f.distance_km/(f.duration_min/60),d:f.distance_km,t:f.duration_min,ac:f.aircraft,from:f.from_city,to:f.to_city,date:f.date}}).sort(function(a,b){return b.speed-a.speed});
+  var fast=speeds[0],slow=speeds[speeds.length-1];
+  var W=680,HT=130,s=mkS(W,HT);
+  // Fast side
+  s.appendChild(el('rect',{x:10,y:10,width:310,height:110,fill:'rgba(37,99,235,.04)',rx:12}));
+  s.appendChild(el('text',{x:165,y:35,fill:C.blue,'font-size':28,'text-anchor':'middle','font-weight':800},fast.speed.toFixed(0)+' km/h'));
+  s.appendChild(el('text',{x:165,y:52,fill:C.navy,'font-size':9,'text-anchor':'middle','font-weight':600},fast.from+' \u2192 '+fast.to));
+  s.appendChild(el('text',{x:165,y:66,fill:C.t3,'font-size':7.5,'text-anchor':'middle'},fast.ac+' \u00b7 '+fast.d+' km in '+fast.t+' min'));
+  s.appendChild(el('text',{x:165,y:80,fill:C.t4,'font-size':6.5,'text-anchor':'middle'},fmtD(fast.date)));
+  s.appendChild(el('text',{x:165,y:105,fill:C.blue,'font-size':7,'text-anchor':'middle','font-weight':700},'FASTEST'));
+  // VS
+  s.appendChild(el('text',{x:W/2,y:65,fill:C.navy,'font-size':16,'text-anchor':'middle','font-weight':800},'7.7\u00d7'));
+  // Slow side
+  s.appendChild(el('rect',{x:360,y:10,width:310,height:110,fill:'rgba(234,88,12,.04)',rx:12}));
+  s.appendChild(el('text',{x:515,y:35,fill:C.orange,'font-size':28,'text-anchor':'middle','font-weight':800},slow.speed.toFixed(0)+' km/h'));
+  s.appendChild(el('text',{x:515,y:52,fill:C.navy,'font-size':9,'text-anchor':'middle','font-weight':600},slow.from+' \u2192 '+slow.to));
+  s.appendChild(el('text',{x:515,y:66,fill:C.t3,'font-size':7.5,'text-anchor':'middle'},slow.ac+' \u00b7 '+slow.d+' km in '+slow.t+' min'));
+  s.appendChild(el('text',{x:515,y:80,fill:C.t4,'font-size':6.5,'text-anchor':'middle'},fmtD(slow.date)));
+  s.appendChild(el('text',{x:515,y:105,fill:C.orange,'font-size':7,'text-anchor':'middle','font-weight':700},'SLOWEST'));
+  $('c-speed').appendChild(s);
+})();
+
+// ═══ AVGEEK: FLEET TABLE ═══
+(function(){
+  var info={
+    'Airbus A320neo':{cat:'Narrow-body',seats:'150–194',len:'37.6m',eng:'LEAP-1A / PW1100G',yr:2014},
+    'Airbus A321neo':{cat:'Narrow-body',seats:'180–244',len:'44.5m',eng:'LEAP-1A / PW1100G',yr:2016},
+    'Airbus A320':{cat:'Narrow-body',seats:'150–180',len:'37.6m',eng:'CFM56 / V2500',yr:1987},
+    'Airbus A321':{cat:'Narrow-body',seats:'185–220',len:'44.5m',eng:'CFM56 / V2500',yr:1993},
+    'Airbus A319':{cat:'Narrow-body',seats:'124–156',len:'33.8m',eng:'CFM56 / V2500',yr:1995},
+    'Airbus A350-900':{cat:'Wide-body',seats:'300–440',len:'66.8m',eng:'Trent XWB',yr:2013},
+    'Boeing 737-800':{cat:'Narrow-body',seats:'162–189',len:'39.5m',eng:'CFM56-7B',yr:1997},
+    'Boeing 737-700':{cat:'Narrow-body',seats:'126–149',len:'33.6m',eng:'CFM56-7B',yr:1997},
+    'Boeing 737 MAX 8':{cat:'Narrow-body',seats:'162–210',len:'39.5m',eng:'LEAP-1B',yr:2016},
+    'ATR 72':{cat:'Turboprop',seats:'68–78',len:'27.2m',eng:'PW127M',yr:1988},
+    'ATR 42 / ATR 72':{cat:'Turboprop',seats:'48–78',len:'22.7–27.2m',eng:'PW127',yr:1984},
+    'ATR 42-300 / 320':{cat:'Turboprop',seats:'42–50',len:'22.7m',eng:'PW120',yr:1984},
+    'Embraer 175':{cat:'Regional Jet',seats:'76–88',len:'31.7m',eng:'CF34-8E',yr:2003}
+  };
+  var counts={};F.forEach(function(f){if(f.aircraft)counts[f.aircraft]=(counts[f.aircraft]||0)+1});
+  var sorted=Object.entries(counts).sort(function(a,b){return b[1]-a[1]});
+  var h='<table class="tbl"><tr><th>Aircraft</th><th>Type</th><th>Flights</th><th>Seats</th><th>Length</th><th>Engines</th></tr>';
+  sorted.forEach(function(e){
+    var name=e[0],n=e[1],i=info[name]||{};
+    var catCol=i.cat==='Wide-body'?C.purple:i.cat==='Turboprop'?C.orange:i.cat==='Regional Jet'?C.cyan:C.blue;
+    h+='<tr><td><b class="hl">'+name+'</b></td><td><span style="color:'+catCol+';font-weight:600;font-size:.65rem">'+((i.cat)||'\u2013')+'</span></td><td><b>'+n+'</b></td><td>'+(i.seats||'\u2013')+'</td><td>'+(i.len||'\u2013')+'</td><td style="font-size:.62rem;color:var(--t3)">'+(i.eng||'\u2013')+'</td></tr>';
+  });
+  h+='</table>';
+  $('c-fleet').innerHTML=h;
+})();
+
+// ═══ AVGEEK: SIZE EXTREMES ═══
+(function(){
+  var h='';
+  h+='<div style="display:flex;gap:1.5rem;align-items:center;justify-content:center;padding:1rem">';
+  // Biggest
+  h+='<div style="text-align:center;flex:1">';
+  h+='<div style="font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:'+C.purple+';margin-bottom:.3rem">Biggest</div>';
+  h+='<div style="font-size:1rem;font-weight:700;color:'+C.navy+'">Airbus A350-900</div>';
+  h+='<div style="font-size:.68rem;color:'+C.t2+'">Wide-body \u00b7 300–440 seats \u00b7 66.8m long</div>';
+  h+='<div style="font-size:.62rem;color:'+C.t3+';margin-top:.2rem">Flown once: DEL\u2192BLR on Air India (Aug 2024)</div>';
+  h+='</div>';
+  // VS
+  h+='<div style="font-family:var(--mono);font-size:1.5rem;font-weight:800;color:'+C.navy+'">3\u00d7</div>';
+  // Smallest
+  h+='<div style="text-align:center;flex:1">';
+  h+='<div style="font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:'+C.orange+';margin-bottom:.3rem">Smallest</div>';
+  h+='<div style="font-size:1rem;font-weight:700;color:'+C.navy+'">ATR 42-300</div>';
+  h+='<div style="font-size:.68rem;color:'+C.t2+'">Turboprop \u00b7 42–50 seats \u00b7 22.7m long</div>';
+  h+='<div style="font-size:.62rem;color:'+C.t3+';margin-top:.2rem">BBI\u2194IXD corridor \u00b7 7 ATR 42 flights</div>';
+  h+='</div>';
+  h+='</div>';
+  $('c-size').innerHTML=h;
+})();
+
+// ═══ AVGEEK: CATEGORY SPLIT ═══
+(function(){
+  var catInfo={
+    'Airbus A320neo':'Narrow-body','Airbus A321neo':'Narrow-body','Airbus A320':'Narrow-body',
+    'Airbus A321':'Narrow-body','Airbus A319':'Narrow-body','Airbus A350-900':'Wide-body',
+    'Boeing 737-800':'Narrow-body','Boeing 737-700':'Narrow-body','Boeing 737 MAX 8':'Narrow-body',
+    'ATR 72':'Turboprop','ATR 42 / ATR 72':'Turboprop','ATR 42-300 / 320':'Turboprop',
+    'Embraer 175':'Regional Jet'
+  };
+  var cats={};F.forEach(function(f){if(!f.aircraft)return;var c=catInfo[f.aircraft]||'Unknown';cats[c]=(cats[c]||0)+1});
+  var sorted=Object.entries(cats).sort(function(a,b){return b[1]-a[1]});
+  var total=sorted.reduce(function(s,e){return s+e[1]},0);
+  var catCols={'Narrow-body':C.blue,'Turboprop':C.orange,'Regional Jet':C.cyan,'Wide-body':C.purple};
+  // Stacked bar
+  var W=320,HT=100,s=mkS(W,HT);
+  var barY=10,barH=30,barW=W-20;
+  var x=10;
+  sorted.forEach(function(e){
+    var name=e[0],n=e[1],w=(n/total)*barW,col=catCols[name]||C.t3;
+    var r=el('rect',{x:x,y:barY,width:Math.max(w,2),height:barH,fill:col,opacity:.85});
+    r.addEventListener('mousemove',function(ev){sT(ev,'<b>'+name+'</b><br>'+n+' flights ('+Math.round(n/total*100)+'%)')});
+    r.addEventListener('mouseleave',hT);
+    s.appendChild(r);
+    if(w>35){s.appendChild(el('text',{x:x+w/2,y:barY+barH/2+4,fill:'#fff','font-size':8,'text-anchor':'middle','font-weight':600},n))}
+    x+=w;
+  });
+  // Legend below
+  var lx=10;
+  sorted.forEach(function(e,i){
+    var name=e[0],n=e[1],col=catCols[name]||C.t3;
+    s.appendChild(el('rect',{x:lx,y:55+Math.floor(i/2)*22,width:8,height:8,fill:col,rx:2}));
+    s.appendChild(el('text',{x:lx+12,y:62+Math.floor(i/2)*22,fill:C.navy,'font-size':8,'font-weight':600},name+' ('+n+')'));
+    lx+=(i%2===0)?160:-160+0;
+    if(i%2===0)lx=lx;else lx=10;
+  });
+  $('c-cat').appendChild(s);
+})();
+
+
+// ═══ THE ROAST ═══
+(function(){
+  var igo=F.filter(function(f){return f.airline==='IGO'}).length;
+  var sorted2=[].concat(F).sort(function(a,b){return a.date.localeCompare(b.date)});
+  var streak=0,maxStreak=0;
+  sorted2.forEach(function(f){if(f.airline==='IGO'){streak++;if(streak>maxStreak)maxStreak=streak}else{streak=0}});
+  var postDelay=sorted2.filter(function(f){return f.date>'2025-12-04'});
+  var postIgo=postDelay.filter(function(f){return f.airline==='IGO'}).length;
+  var intlCount=F.filter(function(f){return f.is_intl}).length;
+
+  var roasts=[
+    
+    {e:'\u{1F634}',t:'Sleep Is a Suggestion',b:'Your \u0022normal\u0022 sleep is 5.5 hours. Before early flights it drops to 3.1 hours. The concerning part isn\u0027t the early flight sleep \u2014 it\u0027s that 5.5 hours is your baseline. That\u0027s not sleep, that\u0027s a long nap.'},
+    {e:'\u{1F697}',t:'Slower Than a Car',b:'Your Prayagraj\u2192Lucknow flight averaged 225 km/h. A Honda City on the Agra-Lucknow Expressway does 230. You paid for a plane ticket to go slower than a Maruti Brezza with a tailwind.'},
+    {e:'\u{1F30D}',t:'141 Flights, 5 Countries',b:'6% international. 94% domestic. You\u0027ve been to more Indian airports (19) than countries. The passport is mostly decorative at this point.'},
+    {e:'\u{1F6E9}',t:'One Wide-Body. Ever.',b:'1 wide-body flight in 141. In 11 years. One A350. You\u0027ve spent a decade in narrow-body middle seats and ATR turboprops that shake like an auto-rickshaw on a bad road.'},
+    {e:'\u{1F4C5}',t:'2017: One Flight',b:'Three separate years with exactly 1 flight each (2015, 2017, 2018). Were you grounded? Did you lose your Aadhaar? In 2017 you took ONE flight the entire year. Some people fly more than that in a weekend.'},
+    {e:'\u{1F682}',t:'169 km Flight',b:'Prayagraj to Lucknow. 169 km. You could have taken a Vande Bharat and still had time for chai at the station. But no, you needed to board a turboprop, taxi for 15 minutes, fly for 25, and pretend it was aviation.'},
+    {e:'\u{1F48D}',t:'Speed-Run Marriage',b:'Bachelor trip to honeymoon in 24 days. BLR\u2192Bali\u2192KL\u2192BLR\u2192Maldives\u2192BLR. That\u0027s 5 flights and a wedding in under a month. Even your marriage had a connecting flight.'},
+  ];
+  var container=$('c-roast');
+  roasts.forEach(function(r){
+    var d=document.createElement('div');
+    d.className='insight';
+    d.style.borderLeftColor='#C2532D';
+    d.innerHTML='<div class="insight-emoji">'+r.e+'</div><div><div class="insight-title">'+r.t+'</div><div class="insight-body">'+r.b+'</div></div>';
+    container.appendChild(d);
+  });
+})();
+</script>
+</body>
+</html>
